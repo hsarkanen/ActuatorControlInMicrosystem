@@ -6,6 +6,8 @@
 
 namespace Ui {
 class HysteresisDialog;
+// aaltoja luovan tilakoneen tilat
+enum Wave {WAVE_UP, WAVE_DOWN, WAVE_ZERO};
 }
 
 class HysteresisGraph;
@@ -19,6 +21,8 @@ public:
     ~HysteresisDialog();
     
     void setController(ControllerInterface *controller);
+public Q_SLOTS:
+    void handleResults();
 private Q_SLOTS:
     void on_startpushButton_clicked();
     void on_cancelpushButton_clicked();
