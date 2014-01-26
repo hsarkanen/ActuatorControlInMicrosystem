@@ -1,0 +1,37 @@
+# Initialize driver after reboot
+/usr/xenomai/sbin/analogy_config analogy0 analogy_ni_pcimio 0x11,1 #last argument from lspci output
+cat /proc/analogy/drivers # Check drivers
+cat /proc/analogy/devices # Check devices
+cat /proc/analogy/00-analogy_ni_pcimio # Check subdevices
+
+
+Successful read:
+insn_read: device analogy0 opened (fd=0)
+insn_read: basic descriptor retrieved
+	 subdevices count = 14
+	 read subdevice index = 0
+	 write subdevice index = 0
+insn_read: complex descriptor retrieved
+insn_read: selected subdevice index = 0
+insn_read: range descriptor retrieved
+	 min = -10000000
+	 max = 10000000
+insn_read: channel width is 16 bits
+insn_read: global scan size is 6
+8.924849
+8.924849
+8.924544
+
+Successful write:
+insn_write: device analogy0 opened (fd=0)
+insn_write: basic descriptor retrieved
+	 subdevices count = 14
+	 read subdevice index = 0
+	 write subdevice index = 0
+insn_write: complex descriptor retrieved
+insn_write: selected subdevice index = 1
+insn_write: channel width is 16 bits
+insn_write: global scan size is 2
+insn_write: writing raw value 0x6ebf3
+insn_write: 2 bytes successfully sent
+
