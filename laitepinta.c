@@ -14,8 +14,12 @@
 
 #include "laitepinta.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <errno.h>
 #ifndef EI_LAITTEITA
-#include <comedilib.h>
+//#include <comedilib.h>
+#include <analogy/analogy.h>
 #endif
 
 #ifdef EI_LAITTEITA
@@ -24,30 +28,32 @@
 static double simulatedData;
 #endif
 
-lsampl_t voltage_to_rawdata(double voltage, double limits[],
-                            lsampl_t maxvalue);
-double rawdata_to_voltage(lsampl_t rawdata, double limits[],
-                          lsampl_t maxvalue);
+//lsampl_t voltage_to_rawdata(double voltage, double limits[],
+//                            lsampl_t maxvalue);
+//double rawdata_to_voltage(lsampl_t rawdata, double limits[],
+//                          lsampl_t maxvalue);
 
 typedef struct laite_data {
   int          alustettu;
   double       vahvistus;
   double       arvo;
   laite_tyyppi tyyppi;
-
-  lsampl_t     daq_maxval;
+  long     daq_maxval;
 #ifndef EI_LAITTEITA
-  comedi_t*    daq_laite;
-  comedi_insn  daq_insn;
+//  comedi_t*    daq_laite;
+//  comedi_insn  daq_insn;
+  a4l_sbinfo_t *sbinfo;
+  a4l_chinfo_t *chinfo;
+  a4l_rnginfo_t *rnginfo;
 #endif
 } laite;
 
-static double dev_range[] = {-10,10};
-
+//static double dev_range[] = {-10,10};
+static a4l_desc_t daq_laite;
 static laite laitteet[2] = {
 #ifndef EI_LAITTEITA
-  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}},
-  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}}
+//  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}},
+//  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}}
 #else
   {0,0.0,0.0,AD_MITTAUS,0}, {0,0.0,0.0,AD_MITTAUS,0}
 #endif
@@ -55,11 +61,19 @@ static laite laitteet[2] = {
 
 laite_id avaaLaite(laite_tyyppi tyyppi) {
   int slot_index = 0;
+  int err = 0;
   
   if( laitteet[0].alustettu == 0 && laitteet[1].alustettu == 0 ) {
 #ifndef EI_LAITTEITA
-    laitteet[0].daq_laite = comedi_open("/dev/comedi0");
-    laitteet[1].daq_laite = laitteet[0].daq_laite;
+//    laitteet[0].daq_laite = comedi_open("/dev/comedi0");
+      daq_laite.sbdata = NULL;
+      err = a4l_open(&daq_laite, "analogy0");
+      if (err != 0){ printf("Opening error\n"); return -1;}
+      // Varaa muistia descriptorin tietojen lukemiseen
+      daq_laite.sbdata = malloc(daq_laite.sbsize);
+      // Lue descriptorin tiedot
+      err = a4l_fill_desc(&daq_laite);
+      if (err != 0){ printf("Filling error\n"); return -1;}
 #else
     simulatedData = 3;
 #endif
@@ -73,19 +87,32 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 
 #ifndef EI_LAITTEITA
   if( tyyppi == AD_MITTAUS ) {
-    laitteet[slot_index].daq_insn.insn = INSN_READ;
-    laitteet[slot_index].daq_insn.subdev = 0;
-    laitteet[slot_index].daq_insn.chanspec = CR_PACK(1,0,AREF_DIFF);
-    laitteet[slot_index].daq_maxval
-        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 0, 0);
+      err = a4l_get_rnginfo(&daq_laite, daq_laite.idx_read_subd, 0, 0,
+                            &laitteet[slot_index].rnginfo);
+      if (err != 0){ printf("Rangeinfo error\n"); return -1;}
+      err = a4l_get_chinfo(&daq_laite, daq_laite.idx_read_subd, 0,
+                           &laitteet[slot_index].chinfo);
+      if (err != 0){ printf("Channelinfo error\n"); return -1;}
+//    laitteet[slot_index].daq_insn.insn = INSN_READ;
+//    laitteet[slot_index].daq_insn.subdev = 0;
+//    laitteet[slot_index].daq_insn.chanspec = CR_PACK(1,0,AREF_DIFF);
+//    laitteet[slot_index].daq_maxval
+//        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 0, 0);
   } else {
-    laitteet[slot_index].daq_insn.insn = INSN_WRITE;
-    laitteet[slot_index].daq_insn.subdev = 1;
-    laitteet[slot_index].daq_insn.chanspec = CR_PACK(0,0,AREF_GROUND);
-    laitteet[slot_index].daq_maxval
-        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 1, 0);
+      err = a4l_get_rnginfo(&daq_laite, daq_laite.idx_write_subd, 0, 0,
+                            &laitteet[slot_index].rnginfo);
+      if (err != 0){ printf("Rangeinfo error\n"); return -1;}
+      err = a4l_get_chinfo(&daq_laite, daq_laite.idx_write_subd, 0,
+                           &laitteet[slot_index].chinfo);
+      if (err != 0){ printf("Channelinfo error\n"); return -1;}
+//    laitteet[slot_index].daq_insn.insn = INSN_WRITE;
+//    laitteet[slot_index].daq_insn.subdev = 1;
+//    laitteet[slot_index].daq_insn.chanspec = CR_PACK(0,0,AREF_GROUND);
+//    laitteet[slot_index].daq_maxval
+//        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 1, 0);
   }
-  laitteet[slot_index].daq_insn.n = 1;
+  laitteet[slot_index].daq_maxval = laitteet[slot_index].rnginfo->max;
+//  laitteet[slot_index].daq_insn.n = 1;
 #else
   laitteet[slot_index].daq_maxval = 65535;
 #endif
@@ -98,7 +125,7 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 
 void suljeLaite(laite_id id) {
   if( id < 1 || id > 2 ) return;
-
+  int err = 0;
   laitteet[id - 1].alustettu  = 0;
   laitteet[id - 1].vahvistus  = 0;
   laitteet[id - 1].arvo       = 0;
@@ -107,9 +134,11 @@ void suljeLaite(laite_id id) {
 
 #ifndef EI_LAITTEITA
   if( laitteet[0].alustettu == 0 && laitteet[1].alustettu == 0 &&
-      laitteet[id - 1].daq_laite != 0 ) {
-    comedi_close(laitteet[id - 1].daq_laite);
-    laitteet[0].daq_laite = laitteet[0].daq_laite = 0;
+      daq_laite.fd != 0 ) {
+//    comedi_close(laitteet[id - 1].daq_laite);
+      err = a4l_close(&daq_laite);
+      if (err != 0){ printf("Closing error\n"); return;}
+      daq_laite.fd = 0;
   }
 #endif
   return;
@@ -132,10 +161,13 @@ int lueMittaus(laite_id id, double* mittaus) {
   if( lte->tyyppi != AD_MITTAUS ) return -1;
 
 #ifndef EI_LAITTEITA
-  lte->daq_insn.data = &data;
-  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
-  
-  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
+//  lte->daq_insn.data = &data;
+//  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
+  err = a4l_sync_read(&daq_laite, 0, 0, 0, &data, sizeof(data));
+  if (err < 0){ printf("Read error\n"); return -1;}
+//  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
+  err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
+  if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
   *mittaus *= lte->vahvistus;
 #else
   //data = 32767;
@@ -163,9 +195,14 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
 
   ohjaus *= lte->vahvistus;
 
-  data = voltage_to_rawdata(ohjaus, dev_range, lte->daq_maxval);
-  lte->daq_insn.data = &data;
-  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
+//  data = voltage_to_rawdata(ohjaus, dev_range, lte->daq_maxval);
+//  printf("Writing: %d to output\n", ohjaus);
+  err = a4l_dtoraw(lte->chinfo, lte->rnginfo, &data, &ohjaus, 1);
+  if (err < 0){ printf("Double to raw conversion error\n"); return -1;}
+//  lte->daq_insn.data = &data;
+//  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
+  err = a4l_sync_write(&daq_laite, 1, 0, 0, &data, sizeof(data));
+  if (err < 0){ printf("Write error\n"); return -1;}
 #else
   
   lte = &laitteet[id - 1];

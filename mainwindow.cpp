@@ -38,7 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
     statusTimer = new QTimer();
 
     // varataan realtimecontrolleri
-    mController = new SimpleController();
+//    mController = new SimpleController();
+    mController = new RealtimeController();
 
     // asetetaan dialogille osoitin controlleriin
     hd->setController(mController);
@@ -161,7 +162,9 @@ void MainWindow::on_setpushButton_clicked()
     sensorscale = (ui->sensordoubleSpinBox->value() + 0.005) * 100;
 
     // asetataan arvot controllerille
+    qDebug()<< "Set PID: " << kp << " "<< ki<<" " << kd;
     mController->setPIDParameters(kp, ki, kd);
+    qDebug()<< "Set value: " << setvalue;
     mController->setSetValue(setvalue);
     mController->setOutputVoltage(outputvoltage);
     mController->setScaleFactors(sensorscale, actuatorscale);

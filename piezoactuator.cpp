@@ -15,6 +15,7 @@
 #include "piezoactuator.h"
 #include "laitepinta.h"
 #include "qglobal.h"
+#include <QDebug>
 	
 PiezoActuator::PiezoActuator()
 {

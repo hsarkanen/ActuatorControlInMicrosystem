@@ -11,7 +11,7 @@ TEMPLATE = app
 CONFIG	+= qt warn_on release \
            no_keywords
 
-LIBS += -L/usr/xenomai/lib -L/usr/lib -lnative -lxenomai
+LIBS += -L/usr/xenomai/lib -L/usr/lib -lanalogy -lnative -lrtdm -lxenomai
 
 INCLUDEPATH += /usr/xenomai/include
 
