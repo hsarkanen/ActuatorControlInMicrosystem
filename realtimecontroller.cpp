@@ -31,6 +31,8 @@
 #include <native/task.h>
 #include <native/pipe.h>
 
+#define MAX_MESSAGE_LENGTH 10
+
 RT_TASK task_desc;
 RT_PIPE pipe_desc;
 int pipefd = 0;
@@ -92,8 +94,10 @@ void realtimeLoop(void *arg)
 {
     Q_UNUSED(arg);
     int xenoRet = 0;
-    char buf[7];
-    int bufValue[1];
+    char bufChar[MAX_MESSAGE_LENGTH];
+    int bufInt[MAX_MESSAGE_LENGTH];
+    ControllerInterface::Mode bufMode[MAX_MESSAGE_LENGTH];
+    ControllerInterface::State bufState[MAX_MESSAGE_LENGTH];
     int kp = 0, ki = 0, kd = 0;
     int setValue = 0;
     int actuatorVoltage = 0;
@@ -169,100 +173,100 @@ void realtimeLoop(void *arg)
 
         // luetaan käyttöliittymästä mahdollisesti tullut viesti
         xenoRet = 0;
-        xenoRet = rt_pipe_read(&pipe_desc, buf, sizeof(buf), TM_NONBLOCK);
+        xenoRet = rt_pipe_read(&pipe_desc, bufChar, sizeof(bufChar), TM_NONBLOCK);
 
         if(xenoRet > 0)
         {
-            if(!strcmp(buf, "reaSen"))
+            if(!strcmp(bufChar, "reaSen"))
             {
                 sensorVoltageToSend = sensorVoltage;
                 int *pBuf = &sensorVoltageToSend;
-                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufValue), P_NORMAL) < 1)
+                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
-                buf[0] = '0';
+                bufChar[0] = '0';
             }
-            else if(!strcmp(buf, "reaOut"))
+            else if(!strcmp(bufChar, "reaOut"))
             {
                 actuatorVoltageToSend = actuatorVoltage;
                 int *pBuf = &actuatorVoltageToSend;
-                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufValue), P_NORMAL) < 1)
+                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
-                buf[0] = '0';
+                bufChar[0] = '0';
             }
-            else if(!strcmp(buf, "reaMod"))
+            else if(!strcmp(bufChar, "reaMod"))
             {
                 modeToSend = mode;
                 ControllerInterface::Mode *pBuf = &modeToSend;
-                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufValue), P_NORMAL) < 1)
+                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
-                buf[0] = '0';
+                bufChar[0] = '0';
             }
-            else if(!strcmp(buf, "reaSta"))
+            else if(!strcmp(bufChar, "reaSta"))
             {
                 stateToSend = state;
                 ControllerInterface::State *pBuf = &stateToSend;
-                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufValue), P_NORMAL) < 1)
+                if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
-                buf[0] = '0';
+                bufChar[0] = '0';
             }
-            else if (!strcmp(buf, "setSta"))
+            else if (!strcmp(bufChar, "setSta"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufMode, sizeof(bufState), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                state = *(ControllerInterface::State*)bufValue;
-                buf[0] = '0';
+                state = *(ControllerInterface::State*)bufState;
+                bufChar[0] = '0';
                 qDebug("Set state: %d", state);
             }
-            else if (!strcmp(buf, "setPID"))
+            else if (!strcmp(bufChar, "setPID"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                kp = *(int*)bufValue;
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                kp = *(int*)bufInt;
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                ki = *(int*)bufValue;
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                ki = *(int*)bufInt;
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                kd = *(int*)bufValue;
-                buf[0] = '0';
+                kd = *(int*)bufInt;
+                bufChar[0] = '0';
                 qDebug("Set PID-parameters p: %d, i: %d, d: %d", kp,ki,kd);
             }
-            else if (!strcmp(buf, "setSet"))
+            else if (!strcmp(bufChar, "setSet"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                setValue = *(int*)bufValue;
-                buf[0] = '0';
+                setValue = *(int*)bufInt;
+                bufChar[0] = '0';
                 qDebug("Set setValue: %d", setValue);
             }
-            else if (!strcmp(buf, "setOut"))
+            else if (!strcmp(bufChar, "setOut"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                actuatorVoltage = *(int*)bufValue * actuatorScaleFactor;
-                buf[0] = '0';
+                actuatorVoltage = *(int*)bufInt * actuatorScaleFactor;
+                bufChar[0] = '0';
                 qDebug("Set actuatorVoltage: %d", actuatorVoltage);
             }
-            else if (!strcmp(buf, "setSca"))
+            else if (!strcmp(bufChar, "setSca"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                sensorScaleFactor = *(int*)bufValue;
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                sensorScaleFactor = *(int*)bufInt;
+                if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                actuatorScaleFactor = *(int*)bufValue;
-                buf[0] = '0';
+                actuatorScaleFactor = *(int*)bufInt;
+                bufChar[0] = '0';
                 qDebug("Set sensorScale to: %d, actuatorScale to: %d", sensorScaleFactor, actuatorScaleFactor);
             }
-            else if (!strcmp(buf, "setMod"))
+            else if (!strcmp(bufChar, "setMod"))
             {
-                if(rt_pipe_read(&pipe_desc, bufValue, sizeof(bufValue), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufMode, sizeof(bufMode), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                mode = *(ControllerInterface::Mode*)bufValue;
-                buf[0] = '0';
+                mode = *(ControllerInterface::Mode*)bufMode;
+                bufChar[0] = '0';
                 qDebug("Set mode to: %d", mode);
             }
-            else if(!strcmp(buf, "theEnd"))
+            else if(!strcmp(bufChar, "theEnd"))
             {
                 qDebug("Bye!");
                 break;
