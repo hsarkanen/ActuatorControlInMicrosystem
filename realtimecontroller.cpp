@@ -94,7 +94,7 @@ void realtimeLoop(void *arg)
     int xenoRet = 0;
     char buf[7];
     int bufValue[1];
-    int kp,ki,kd;
+    int kp = 0, ki = 0, kd = 0;
     int setValue = 0;
     int actuatorVoltage = 0;
     int actuatorVoltageToSend = 0;
@@ -137,7 +137,7 @@ void realtimeLoop(void *arg)
         if(state == ControllerInterface::STARTED)
         {
             sensor->getValue(sensorValue);
-            sensorVoltage = -sensorValue * sensorScaleFactor;
+            sensorVoltage = sensorValue * sensorScaleFactor;
 
             // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
             if (!hysteresisAnalysisRunning)
