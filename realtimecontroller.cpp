@@ -211,7 +211,7 @@ void realtimeLoop(void *arg)
             }
             else if (!strcmp(bufChar, "setSta"))
             {
-                if(rt_pipe_read(&pipe_desc, bufMode, sizeof(bufState), TM_INFINITE) < 1)
+                if(rt_pipe_read(&pipe_desc, bufState, sizeof(bufState), TM_INFINITE) < 1)
                     qDebug("rt read error");
                 state = *(ControllerInterface::State*)bufState;
                 bufChar[0] = '0';
@@ -374,7 +374,7 @@ void RealtimeController::setOutputVoltage(int value)
 
 void RealtimeController::readSensorVoltage(int &value)
 {
-    int bufValue[1];
+    int bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaSen", sizeof("reaSen")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
@@ -416,7 +416,7 @@ void RealtimeController::stop()
 
 void RealtimeController::readOutputVoltage(int &value)
 {
-    int bufValue[1];
+    int bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaOut", sizeof("reaOut")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
@@ -426,7 +426,7 @@ void RealtimeController::readOutputVoltage(int &value)
 
 void RealtimeController::getMode(ControllerInterface::Mode &mode)
 {
-    ControllerInterface::Mode bufValue[1];
+    ControllerInterface::Mode bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaMod", sizeof("reaMod")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
@@ -436,7 +436,7 @@ void RealtimeController::getMode(ControllerInterface::Mode &mode)
 
 void RealtimeController::getState(ControllerInterface::State &state)
 {
-    ControllerInterface::State bufValue[1];
+    ControllerInterface::State bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaSta", sizeof("reaSta")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
