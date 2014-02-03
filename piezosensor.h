@@ -29,8 +29,9 @@ public:
 	
 	void init();	
     void getValue(int &value);
-	
-    private:
+    void setScale(int scale);
+
+private:
 
     // anturin id
     int _id;

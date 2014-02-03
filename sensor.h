@@ -32,6 +32,9 @@ public:
 
     // anturin mittaus arvon lukeminen
     virtual void getValue(int& value) = 0;
+
+    // anturin vahvistuksen asettaminen
+    virtual void setScale(int scale) = 0;
 };
 
 #endif

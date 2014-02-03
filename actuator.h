@@ -35,6 +35,9 @@ public:
 
     // toimilaitteen ohjauksen lukeminen
     virtual void getValue(int& value) = 0;
+
+    // toimilaitteen vahvistuksen asettaminen
+    virtual void setScale(int scale) = 0;
 };
 
 #endif

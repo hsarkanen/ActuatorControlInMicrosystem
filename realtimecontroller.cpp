@@ -104,9 +104,6 @@ void realtimeLoop(void *arg)
     int actuatorVoltageToSend = 0;
     int sensorVoltage = 0;
     int sensorVoltageToSend = 0;
-    int sensorValue = 0;
-    int actuatorScaleFactor = 1;
-    int sensorScaleFactor = 1;
     ControllerInterface::Mode mode = ControllerInterface::MODE_MANUAL;
     ControllerInterface::Mode modeToSend;
     ControllerInterface::State state = ControllerInterface::STOPPED;
@@ -140,8 +137,7 @@ void realtimeLoop(void *arg)
 
         if(state == ControllerInterface::STARTED)
         {
-            sensor->getValue(sensorValue);
-            sensorVoltage = sensorValue * sensorScaleFactor;
+            sensor->getValue(sensorVoltage);
 
             // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
             if (!hysteresisAnalysisRunning)
@@ -155,8 +151,7 @@ void realtimeLoop(void *arg)
                 else
                 {
                     // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
-                    output = pid(setValue, sensorVoltage, kp, ki, kd) *
-                            actuatorScaleFactor;
+                    output = pid(setValue, sensorVoltage, kp, ki, kd);
                 }
             }
             // jos tehdään hystereesianalyysiä ei tehdä PID-säätöä tai suoraa ohjausta
@@ -243,7 +238,7 @@ void realtimeLoop(void *arg)
             {
                 if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                actuatorVoltage = *(int*)bufInt * actuatorScaleFactor;
+                actuatorVoltage = *(int*)bufInt;
                 bufChar[0] = '0';
                 qDebug("Set actuatorVoltage: %d", actuatorVoltage);
             }
@@ -251,12 +246,12 @@ void realtimeLoop(void *arg)
             {
                 if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                sensorScaleFactor = *(int*)bufInt;
+                sensor->setScale(*(int*)bufInt);
                 if(rt_pipe_read(&pipe_desc, bufInt, sizeof(bufInt), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                actuatorScaleFactor = *(int*)bufInt;
+                actuator->setScale(*(int*)bufInt);
                 bufChar[0] = '0';
-                qDebug("Set sensorScale to: %d, actuatorScale to: %d", sensorScaleFactor, actuatorScaleFactor);
+                qDebug("Set sensor and, actuator scales");
             }
             else if (!strcmp(bufChar, "setMod"))
             {

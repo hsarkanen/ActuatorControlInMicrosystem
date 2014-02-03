@@ -29,6 +29,7 @@ public:
 	~PiezoActuator();
 	
 	void init();
+    void setScale(int scale);
     void setValue(int value);
     void getValue(int& value);
 	

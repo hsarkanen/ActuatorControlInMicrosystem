@@ -148,24 +148,25 @@ void MainWindow::on_setpushButton_clicked()
         return;
     }
     if ( ui->voltagedoubleSpinBox->value() < 0)
-        outputvoltage = (ui->voltagedoubleSpinBox->value() - 0.005) * 100;
+        outputvoltage = (ui->voltagedoubleSpinBox->value() - 0.0005) * 1000;
     else
-        outputvoltage = (ui->voltagedoubleSpinBox->value() + 0.005) * 100;
+        outputvoltage = (ui->voltagedoubleSpinBox->value() + 0.0005) * 1000;
     if ( ui->setvaluedoubleSpinBox->value() < 0)
-        setvalue = (ui->setvaluedoubleSpinBox->value() - 0.005) * 100;
+        setvalue = (ui->setvaluedoubleSpinBox->value() - 0.0005) * 1000;
     else
-        setvalue = (ui->setvaluedoubleSpinBox->value() + 0.005) * 100;
+        setvalue = (ui->setvaluedoubleSpinBox->value() + 0.0005) * 1000;
     kp = (ui->pdoubleSpinBox->value() + 0.005) * 100;
     ki = (ui->idoubleSpinBox->value() + 0.005) * 100;
     kd = (ui->ddoubleSpinBox->value() + 0.005) * 100;
-    actuatorscale = (ui->actuatordoubleSpinBox->value() + 0.005) * 100;
-    sensorscale = (ui->sensordoubleSpinBox->value() + 0.005) * 100;
+    actuatorscale = (ui->actuatordoubleSpinBox->value() + 0.0005) * 1000;
+    sensorscale = (ui->sensordoubleSpinBox->value() + 0.0005) * 1000;
 
     // asetataan arvot controllerille
     qDebug()<< "Set PID: " << kp << " "<< ki<<" " << kd;
     mController->setPIDParameters(kp, ki, kd);
     qDebug()<< "Set value: " << setvalue;
     mController->setSetValue(setvalue);
+    qDebug()<< "Set output: " << outputvoltage;
     mController->setOutputVoltage(outputvoltage);
     mController->setScaleFactors(sensorscale, actuatorscale);
 }

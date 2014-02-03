@@ -33,6 +33,12 @@ void PiezoActuator::init()
     _id = avaaLaite(DA_OHJAUS);
 }
 
+void PiezoActuator::setScale(int scale)
+{
+    double dScale = scale / 1000.0;
+    asetaVahvistus(_id, dScale);
+}
+
 void PiezoActuator::setValue(int value)
 {
     // skaalataan int millivoltit double volteiksi

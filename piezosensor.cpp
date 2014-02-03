@@ -32,6 +32,12 @@ void PiezoSensor::init()
     _id = avaaLaite(AD_MITTAUS);
 }
 
+void PiezoSensor::setScale(int scale)
+{
+    double dScale = scale / 1000.0;
+    asetaVahvistus(_id, dScale);
+}
+
 void PiezoSensor::getValue(int& value)
 {
     // luetaan anturin mittausarvo
