@@ -166,11 +166,11 @@ int lueMittaus(laite_id id, double* mittaus) {
 //  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
   err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(short));
   if (err < 0){ printf("Read error\n"); return -1;}
-  else { printf("Read raw value %d\n", data); } //TODO: Remove this
+//  else { printf("Read raw value %d\n", data); } //TODO: Remove this
 //  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
-  else { printf("Converted raw to %f\n", *mittaus); }  //TODO: Remove this
+//  else { printf("Converted raw to %f\n", *mittaus); }  //TODO: Remove this
   *mittaus *= lte->vahvistus;
 #else
   //data = 32767;
