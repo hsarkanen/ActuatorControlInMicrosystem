@@ -16,7 +16,7 @@
 #include "laitepinta.h"
 #include "qglobal.h"
 
-PiezoSensor::PiezoSensor()
+PiezoSensor::PiezoSensor(): _value(0)
 {
 }
 

@@ -17,7 +17,7 @@
 #include "qglobal.h"
 #include <QDebug>
 	
-PiezoActuator::PiezoActuator()
+PiezoActuator::PiezoActuator(): _value(0)
 {
 }
 
