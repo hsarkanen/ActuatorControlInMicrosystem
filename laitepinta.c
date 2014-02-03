@@ -87,10 +87,10 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 
 #ifndef EI_LAITTEITA
   if( tyyppi == AD_MITTAUS ) {
-      err = a4l_get_rnginfo(&daq_laite, daq_laite.idx_read_subd, 0, 0,
+      err = a4l_get_rnginfo(&daq_laite, 0, 0, 0,
                             &laitteet[slot_index].rnginfo);
       if (err != 0){ printf("Rangeinfo error\n"); return -1;}
-      err = a4l_get_chinfo(&daq_laite, daq_laite.idx_read_subd, 0,
+      err = a4l_get_chinfo(&daq_laite, 0, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
 //    laitteet[slot_index].daq_insn.insn = INSN_READ;
@@ -99,10 +99,10 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 //    laitteet[slot_index].daq_maxval
 //        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 0, 0);
   } else {
-      err = a4l_get_rnginfo(&daq_laite, daq_laite.idx_write_subd, 0, 0,
+      err = a4l_get_rnginfo(&daq_laite, 1, 0, 0,
                             &laitteet[slot_index].rnginfo);
       if (err != 0){ printf("Rangeinfo error\n"); return -1;}
-      err = a4l_get_chinfo(&daq_laite, daq_laite.idx_write_subd, 0,
+      err = a4l_get_chinfo(&daq_laite, 1, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
 //    laitteet[slot_index].daq_insn.insn = INSN_WRITE;
@@ -136,6 +136,7 @@ void suljeLaite(laite_id id) {
   if( laitteet[0].alustettu == 0 && laitteet[1].alustettu == 0 &&
       daq_laite.fd != 0 ) {
 //    comedi_close(laitteet[id - 1].daq_laite);
+      if (daq_laite.sbdata != NULL) { free(daq_laite.sbdata); } // Vapauta varattu muisti
       err = a4l_close(&daq_laite);
       if (err != 0){ printf("Closing error\n"); return;}
       daq_laite.fd = 0;
@@ -163,7 +164,7 @@ int lueMittaus(laite_id id, double* mittaus) {
 #ifndef EI_LAITTEITA
 //  lte->daq_insn.data = &data;
 //  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
-  err = a4l_sync_read(&daq_laite, 0, 0, 0, &data, sizeof(data));
+  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(data));
   if (err < 0){ printf("Read error\n"); return -1;}
 //  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
@@ -182,7 +183,7 @@ int lueMittaus(laite_id id, double* mittaus) {
 }
 
 int ohjaaLaitetta(laite_id id, double ohjaus) {
-  lsampl_t data = 0;
+  static int data = 0;
   laite *lte = 0;
   int err = 0;
 
@@ -194,15 +195,16 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   if( lte->tyyppi != DA_OHJAUS ) return -1;
 
   ohjaus *= lte->vahvistus;
-
+//  ohjaus = -2.0; TODO: Remove this
 //  data = voltage_to_rawdata(ohjaus, dev_range, lte->daq_maxval);
 //  printf("Writing: %d to output\n", ohjaus);
   err = a4l_dtoraw(lte->chinfo, lte->rnginfo, &data, &ohjaus, 1);
   if (err < 0){ printf("Double to raw conversion error\n"); return -1;}
 //  lte->daq_insn.data = &data;
 //  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
-  err = a4l_sync_write(&daq_laite, 1, 0, 0, &data, sizeof(data));
-  if (err < 0){ printf("Write error\n"); return -1;}
+//  data *= 0x00010001;  // Little-endian conversion? TODO: Remove this
+  err = a4l_sync_write(&daq_laite, 1, CHAN(0), 0, &data, sizeof(short));
+  if (err < 0){ printf("Write error, code %d\n", err); return -1;}
 #else
   
   lte = &laitteet[id - 1];
