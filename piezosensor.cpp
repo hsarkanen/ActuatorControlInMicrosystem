@@ -45,8 +45,8 @@ void PiezoSensor::getValue(int& value)
     }
     else
     {
-        // otetaan viimeisin arvo ylös
-        _value = measuredValue;
+        // skaalataan double voltit int millivolteiksi ja otetaan viimeisin arvo ylös
+        _value = 1000 * measuredValue;
     }
     
     // palautetaan mittausarvo tai viimeksi luettu arvo

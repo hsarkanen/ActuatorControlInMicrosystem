@@ -186,9 +186,9 @@ void MainWindow::statusTimerTimeout()
     // ja näytetään ne käyttäliittymässä
     int voltage = 0;
     mController->readOutputVoltage(voltage);
-    ui->outputvoltagelabel->setText( QString("%1 V").arg(voltage,10, 'f',3 ));
+    ui->outputvoltagelabel->setText( QString("%1 V").arg(voltage / 1000.0, 10, 'f',3 ));
     mController->readSensorVoltage(voltage);
-    ui->sensorvoltagelabel->setText(QString("%1 V").arg(voltage,10,  'f',3 ));
+    ui->sensorvoltagelabel->setText(QString("%1 V").arg(voltage / 1000.0, 10,  'f',3 ));
 }
 
 void MainWindow::on_manualmodeRadioButton_clicked()

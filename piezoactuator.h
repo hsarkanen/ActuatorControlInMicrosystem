@@ -37,8 +37,8 @@ public:
     // toimilaitteen id
     int _id;
 
-    // toimilaitten ohjausarvo voltteina
-    double _value;
+    // toimilaitten ohjausarvo millivoltteina
+    int _value;
 };
 
 #endif

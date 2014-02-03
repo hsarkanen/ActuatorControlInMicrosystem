@@ -35,8 +35,8 @@ public:
     // anturin id
     int _id;
 
-    // anturin mittausarvo voltteina
-    double _value;
+    // anturin mittausarvo millivoltteina
+    int _value;
 };
 
 #endif

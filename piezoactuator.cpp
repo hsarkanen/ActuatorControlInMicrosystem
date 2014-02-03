@@ -34,8 +34,10 @@ void PiezoActuator::init()
 
 void PiezoActuator::setValue(int value)
 {
+    // skaalataan int millivoltit double volteiksi
+    double ohjaus = value / 1000.0;
     // ohjataan toimilaitetta ja tarkistetaan paluuarvo
-    int control = ohjaaLaitetta(_id, value);
+    int control = ohjaaLaitetta(_id, ohjaus);
 
     // tarkistetaan paluuarvo
     if(control <= 0)
