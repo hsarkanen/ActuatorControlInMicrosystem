@@ -68,8 +68,8 @@ void HysteresisGraph::setTitles(const QString &x, const QString &y)
 
 void HysteresisGraph::showNumbers(bool show)
 {
-    ui->label_lcd_x->setShown(show);
-    ui->label_lcd_y->setShown(show);
-    ui->lcdNumber_x->setShown(show);
-    ui->lcdNumber_y->setShown(show);
+    ui->label_lcd_x->setVisible(show);
+    ui->label_lcd_y->setVisible(show);
+    ui->lcdNumber_x->setVisible(show);
+    ui->lcdNumber_y->setVisible(show);
 }
