@@ -1,47 +1,24 @@
-//----------------------------------------------------------------------------
-// ACI-32020 Automaation reaaliaikajärjestelmät, syksy 2011
-//
-//         Harjoitustyö: Mikrosysteemitekniikan toimilaiteohjaus
-//
-// Vastaava assistentti: David Hästbacka, david.hastbacka@tut.fi, huone sd114
-//              Ryhmä 8: Petri Rokka (189637), Heikki Sarkanen (198905)
-//
-//----------------------------------------------------------------------------
-//
-//  Laitepinta - valmiiksi annettu toteutus.
-//
-//----------------------------------------------------------------------------
-
 #include "laitepinta.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <errno.h>
 #ifndef EI_LAITTEITA
-//#include <comedilib.h>
 #include <analogy/analogy.h>
 #endif
 
 #ifdef EI_LAITTEITA
 #define lsampl_t unsigned int
+#define sampl_t unsigned short
 // Simulated measurement value
 static double simulatedData;
 #endif
 
-//lsampl_t voltage_to_rawdata(double voltage, double limits[],
-//                            lsampl_t maxvalue);
-//double rawdata_to_voltage(lsampl_t rawdata, double limits[],
-//                          lsampl_t maxvalue);
-
 typedef struct laite_data {
   int          alustettu;
   double       vahvistus;
-  double       arvo;
   laite_tyyppi tyyppi;
-  long     daq_maxval;
 #ifndef EI_LAITTEITA
-//  comedi_t*    daq_laite;
-//  comedi_insn  daq_insn;
   a4l_sbinfo_t *sbinfo;
   a4l_chinfo_t *chinfo;
   a4l_rnginfo_t *rnginfo;
@@ -49,13 +26,15 @@ typedef struct laite_data {
 } laite;
 
 static double dev_range[] = {-10,10};
+#ifndef EI_LAITTEITA
 static a4l_desc_t daq_laite;
+#endif
 static laite laitteet[2] = {
 #ifndef EI_LAITTEITA
-//  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}},
-//  {0,0.0,0.0,AD_MITTAUS,0,0,{0,0,0,0,0,{0,0,0}}}
+    {0,0.0,AD_MITTAUS,0,0,0},
+    {0,0.0,AD_MITTAUS,0,0,0}
 #else
-  {0,0.0,0.0,AD_MITTAUS,0}, {0,0.0,0.0,AD_MITTAUS,0}
+    {0,0.0,AD_MITTAUS}, {0,0.0,AD_MITTAUS}
 #endif
 };
 
@@ -65,13 +44,10 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
   
   if( laitteet[0].alustettu == 0 && laitteet[1].alustettu == 0 ) {
 #ifndef EI_LAITTEITA
-//    laitteet[0].daq_laite = comedi_open("/dev/comedi0");
       daq_laite.sbdata = NULL;
       err = a4l_open(&daq_laite, "analogy0");
       if (err != 0){ printf("Opening error\n"); return -1;}
-      // Varaa muistia descriptorin tietojen lukemiseen
       daq_laite.sbdata = malloc(daq_laite.sbsize);
-      // Lue descriptorin tiedot
       err = a4l_fill_desc(&daq_laite);
       if (err != 0){ printf("Filling error\n"); return -1;}
 #else
@@ -93,11 +69,6 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
       err = a4l_get_chinfo(&daq_laite, 0, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
-//    laitteet[slot_index].daq_insn.insn = INSN_READ;
-//    laitteet[slot_index].daq_insn.subdev = 0;
-//    laitteet[slot_index].daq_insn.chanspec = CR_PACK(1,0,AREF_DIFF);
-//    laitteet[slot_index].daq_maxval
-//        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 0, 0);
   } else {
       err = a4l_find_range(&daq_laite, 1, 0, A4L_RNG_VOLT_UNIT, dev_range[0], dev_range[1],
                            &laitteet[slot_index].rnginfo);
@@ -105,16 +76,7 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
       err = a4l_get_chinfo(&daq_laite, 1, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
-//    laitteet[slot_index].daq_insn.insn = INSN_WRITE;
-//    laitteet[slot_index].daq_insn.subdev = 1;
-//    laitteet[slot_index].daq_insn.chanspec = CR_PACK(0,0,AREF_GROUND);
-//    laitteet[slot_index].daq_maxval
-//        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 1, 0);
   }
-  laitteet[slot_index].daq_maxval = laitteet[slot_index].rnginfo->max;
-//  laitteet[slot_index].daq_insn.n = 1;
-#else
-  laitteet[slot_index].daq_maxval = 65535;
 #endif
 
   laitteet[slot_index].tyyppi = tyyppi;
@@ -128,15 +90,12 @@ void suljeLaite(laite_id id) {
   int err = 0;
   laitteet[id - 1].alustettu  = 0;
   laitteet[id - 1].vahvistus  = 0;
-  laitteet[id - 1].arvo       = 0;
   laitteet[id - 1].tyyppi     = AD_MITTAUS;
-  laitteet[id - 1].daq_maxval = 0;
 
 #ifndef EI_LAITTEITA
   if( laitteet[0].alustettu == 0 && laitteet[1].alustettu == 0 &&
       daq_laite.fd != 0 ) {
-//    comedi_close(laitteet[id - 1].daq_laite);
-      if (daq_laite.sbdata != NULL) { free(daq_laite.sbdata); } // Vapauta varattu muisti
+      if (daq_laite.sbdata != NULL) { free(daq_laite.sbdata); }
       err = a4l_close(&daq_laite);
       if (err != 0){ printf("Closing error\n"); return;}
       daq_laite.fd = 0;
@@ -162,15 +121,10 @@ int lueMittaus(laite_id id, double* mittaus) {
   if( lte->tyyppi != AD_MITTAUS ) return -1;
 
 #ifndef EI_LAITTEITA
-//  lte->daq_insn.data = &data;
-//  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
   err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, 3*sizeof(sampl_t)); // TODO: Why 3 times?
   if (err < 0){ printf("Read error\n"); return -1;}
-//  else { printf("Read raw value %d\n", data); } //TODO: Remove this
-//  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
-//  else { printf("Converted raw to %f\n", *mittaus); }  //TODO: Remove this
   *mittaus *= lte->vahvistus;
 #else
   //data = 32767;
@@ -197,14 +151,8 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   if( lte->tyyppi != DA_OHJAUS ) return -1;
 
   ohjaus *= lte->vahvistus;
-//  ohjaus = -2.0; TODO: Remove this
-//  data = voltage_to_rawdata(ohjaus, dev_range, lte->daq_maxval);
-//  printf("Writing: %d to output\n", ohjaus);
   err = a4l_dtoraw(lte->chinfo, lte->rnginfo, &data, &ohjaus, 1);
   if (err < 0){ printf("Double to raw conversion error\n"); return -1;}
-//  lte->daq_insn.data = &data;
-//  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
-//  data *= 0x00010001;  // Little-endian conversion? TODO: Remove this
   err = a4l_sync_write(&daq_laite, 1, CHAN(0), 0, &data, sizeof(short));
   if (err < 0){ printf("Write error, code %d\n", err); return -1;}
 #else
@@ -226,24 +174,4 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   
 #endif
   return err;
-}
-
-lsampl_t voltage_to_rawdata(double voltage, double limits[], lsampl_t maxvalue) {
-  double tmp = (voltage - limits[0]) / (limits[1] - limits[0])
-    * (double)maxvalue;
-  lsampl_t conv_smpl = 0;
-  if( tmp < 0 ) conv_smpl = 0;
-  else if( tmp > (double)maxvalue ) conv_smpl = maxvalue;
-  else conv_smpl = (lsampl_t)((int)(tmp + 0.5));
-
-  return conv_smpl;
-}
-
-double rawdata_to_voltage(lsampl_t rawdata, double limits[], lsampl_t maxvalue) {
-  double conv_phys = (double)rawdata;
-  conv_phys /= (double)maxvalue;
-  conv_phys *= (limits[1] - limits[0]);
-  conv_phys += limits[0];
-
-  return conv_phys;
 }

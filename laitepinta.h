@@ -1,21 +1,3 @@
-//----------------------------------------------------------------------------
-// ACI-32020 Automaation reaaliaikajärjestelmät, syksy 2011
-//
-//         Harjoitustyö: Mikrosysteemitekniikan toimilaiteohjaus
-//
-// Vastaava assistentti: David Hästbacka, david.hastbacka@tut.fi, huone sd114
-//              Ryhmä 8: Petri Rokka (189637), Heikki Sarkanen (198905)
-//
-//----------------------------------------------------------------------------
-//
-//  Laitepinta -luokan määrittely. Valmiiksi annettu koodi.
-//
-//  Toimilaitteen ja anturin käyttämisen mahdollistavan rajapinta.
-//
-//
-//----------------------------------------------------------------------------
-
-
 #ifndef LAITEPINTA_H
 #define LAITEPINTA_H
 
@@ -30,7 +12,7 @@ typedef int laite_id;
 
 typedef enum {
   AD_MITTAUS,
-  DA_OHJAUS,
+  DA_OHJAUS
 } laite_tyyppi;
 
 laite_id avaaLaite(laite_tyyppi tyyppi);
