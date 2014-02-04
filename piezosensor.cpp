@@ -45,7 +45,7 @@ void PiezoSensor::getValue(int& value)
     int measure = lueMittaus(_id, &measuredValue);
 
     // tarkistetaan paluuarvo
-    if(measure <= 0)
+    if(measure < 0)
     {
         qDebug("Mittaaminen ei onnistunut.");
     }

@@ -47,7 +47,7 @@ void PiezoActuator::setValue(int value)
     int control = ohjaaLaitetta(_id, ohjaus);
 
     // tarkistetaan paluuarvo
-    if(control <= 0)
+    if(control < 0)
     {
         qDebug("Ohjaaminen ei onnistunut.");
     }

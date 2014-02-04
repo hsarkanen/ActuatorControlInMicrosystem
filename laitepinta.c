@@ -165,10 +165,10 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   if( (simulatedData > 0 && simulatedData >= ohjaus) || 
       (simulatedData < 0 && simulatedData <= ohjaus) )
       simulatedData = ohjaus;
-  else if( (simulatedData + multiplier*ohjaus) > 10 )
-      simulatedData = 10;
-  else if( (simulatedData + multiplier*ohjaus) < -10)
-      simulatedData = -10;
+  else if( (simulatedData + multiplier*ohjaus) > dev_range[1] )
+      simulatedData = dev_range[1];
+  else if( (simulatedData + multiplier*ohjaus) < dev_range[0])
+      simulatedData = dev_range[0];
   else
       simulatedData = (simulatedData + (multiplier*ohjaus));
   
