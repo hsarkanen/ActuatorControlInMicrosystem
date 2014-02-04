@@ -44,5 +44,3 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     hysteresisdialog.ui \
     hysteresisgraph.ui
-
-XENO=/usr/bin/xeno-config
