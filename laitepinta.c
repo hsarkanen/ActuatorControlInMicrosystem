@@ -121,7 +121,7 @@ int lueMittaus(laite_id id, double* mittaus) {
   if( lte->tyyppi != AD_MITTAUS ) return -1;
 
 #ifndef EI_LAITTEITA
-  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, 3*sizeof(sampl_t)); // TODO: Why 3 times?
+  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(lsampl_t)); // TODO: Why nbytes != sizeof(data)?
   if (err < 0){ printf("Read error\n"); return -1;}
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
@@ -153,7 +153,7 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   ohjaus *= lte->vahvistus;
   err = a4l_dtoraw(lte->chinfo, lte->rnginfo, &data, &ohjaus, 1);
   if (err < 0){ printf("Double to raw conversion error\n"); return -1;}
-  err = a4l_sync_write(&daq_laite, 1, CHAN(0), 0, &data, sizeof(short));
+  err = a4l_sync_write(&daq_laite, 1, CHAN(0), 0, &data, sizeof(sampl_t));
   if (err < 0){ printf("Write error, code %d\n", err); return -1;}
 #else
   
