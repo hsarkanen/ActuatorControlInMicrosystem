@@ -48,7 +48,7 @@ typedef struct laite_data {
 #endif
 } laite;
 
-//static double dev_range[] = {-10,10};
+static double dev_range[] = {-10,10};
 static a4l_desc_t daq_laite;
 static laite laitteet[2] = {
 #ifndef EI_LAITTEITA
@@ -87,9 +87,9 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 
 #ifndef EI_LAITTEITA
   if( tyyppi == AD_MITTAUS ) {
-      err = a4l_get_rnginfo(&daq_laite, 0, 0, 0,
-                            &laitteet[slot_index].rnginfo);
-      if (err != 0){ printf("Rangeinfo error\n"); return -1;}
+      err = a4l_find_range(&daq_laite, 0, 0, A4L_RNG_VOLT_UNIT, dev_range[0], dev_range[1],
+                           &laitteet[slot_index].rnginfo);
+      if (err < 0){ printf("Rangeinfo error\n"); return -1;}
       err = a4l_get_chinfo(&daq_laite, 0, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
@@ -99,9 +99,9 @@ laite_id avaaLaite(laite_tyyppi tyyppi) {
 //    laitteet[slot_index].daq_maxval
 //        = comedi_get_maxdata(laitteet[slot_index].daq_laite, 0, 0);
   } else {
-      err = a4l_get_rnginfo(&daq_laite, 1, 0, 0,
-                            &laitteet[slot_index].rnginfo);
-      if (err != 0){ printf("Rangeinfo error\n"); return -1;}
+      err = a4l_find_range(&daq_laite, 1, 0, A4L_RNG_VOLT_UNIT, dev_range[0], dev_range[1],
+                           &laitteet[slot_index].rnginfo);
+      if (err < 0){ printf("Rangeinfo error\n"); return -1;}
       err = a4l_get_chinfo(&daq_laite, 1, 0,
                            &laitteet[slot_index].chinfo);
       if (err != 0){ printf("Channelinfo error\n"); return -1;}
@@ -152,7 +152,7 @@ void asetaVahvistus(laite_id id, double vahvistus) {
 }
 
 int lueMittaus(laite_id id, double* mittaus) {
-  static int data = 0;
+  static sampl_t data = 0;
   laite *lte = 0;
   int err = 0;
 
@@ -164,7 +164,7 @@ int lueMittaus(laite_id id, double* mittaus) {
 #ifndef EI_LAITTEITA
 //  lte->daq_insn.data = &data;
 //  err = comedi_do_insn(lte->daq_laite, &lte->daq_insn);
-  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(short));
+  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, 3*sizeof(sampl_t)); // TODO: Why 3 times?
   if (err < 0){ printf("Read error\n"); return -1;}
 //  else { printf("Read raw value %d\n", data); } //TODO: Remove this
 //  *mittaus = rawdata_to_voltage(data, dev_range, lte->daq_maxval);
@@ -185,7 +185,7 @@ int lueMittaus(laite_id id, double* mittaus) {
 }
 
 int ohjaaLaitetta(laite_id id, double ohjaus) {
-  static int data = 0;
+  static sampl_t data = 0;
   laite *lte = 0;
   int err = 0;
 
