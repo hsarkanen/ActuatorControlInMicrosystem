@@ -53,7 +53,7 @@ void HysteresisGraph::clearGraph()
     ui->lcdNumber_x->display(0.0);
     ui->lcdNumber_y->display(0.0);
 
-    for (unsigned int i = 0; i < m_lines.size(); i++)
+    for (int i = 0; i < m_lines.size(); i++)
     {
         delete m_lines[i];
     }

@@ -108,10 +108,13 @@ void realtimeLoop(void *arg)
     ControllerInterface::Mode modeToSend;
     ControllerInterface::State state = ControllerInterface::STOPPED;
     ControllerInterface::State stateToSend;
-    int hysteresisAnalysisRunning = 0;
+    int hystAnalysisRunning = 0;
+    unsigned int hystControlListIndex = 0;
     int output = 0;
     PiezoSensor* sensor;
     PiezoActuator* actuator;
+
+    HysteresisData& hystData = getHysteresisData();
 
     // varataan muisti anturille ja alustetaa se
     sensor = new PiezoSensor();
@@ -140,7 +143,7 @@ void realtimeLoop(void *arg)
             sensor->getValue(sensorVoltage);
 
             // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
-            if (!hysteresisAnalysisRunning)
+            if (!hystAnalysisRunning)
             {
                 if( mode == ControllerInterface::MODE_MANUAL)
                 {
@@ -157,8 +160,20 @@ void realtimeLoop(void *arg)
             // jos tehdään hystereesianalyysiä ei tehdä PID-säätöä tai suoraa ohjausta
             else
             {
-                // TODO
-                qDebug("not yet implemented");
+                hystData.measurement[hystControlListIndex] = sensorVoltage;
+                output = hystData.output[hystControlListIndex];
+                if (hystControlListIndex < hystData.controlValuesAmount - 1)
+                {
+                    ++hystControlListIndex;
+                }
+                else
+                {
+                    hystAnalysisRunning = 0;
+                    // kerrotaan non-rt puolelle että analyysi on valmis
+                    if(rt_pipe_write(&pipe_desc, "hysRea", sizeof("hysRea"), P_NORMAL) < 1)
+                        qDebug("rt write error");
+                    bufChar[0] = '0';
+                }
             }
         }
 
@@ -260,6 +275,12 @@ void realtimeLoop(void *arg)
                 mode = *(ControllerInterface::Mode*)bufMode;
                 bufChar[0] = '0';
                 qDebug("Set mode to: %d", mode);
+            }
+            else if (!strcmp(bufChar, "staHys"))
+            {
+                hystAnalysisRunning = 1;
+                hystControlListIndex = 0;
+                qDebug("Starting hysteris analysis");
             }
             else if(!strcmp(bufChar, "theEnd"))
             {
@@ -441,6 +462,11 @@ void RealtimeController::getState(ControllerInterface::State &state)
 
 void RealtimeController::startHysteresisAnalysis()
 {
-    // TODO
-    qDebug("not yet implemented");
+    char bufValue[MAX_MESSAGE_LENGTH];
+    if(write(pipefd, "staHys", sizeof("staHys")) < 0)
+        qDebug("error %d : %s\n", -errno, strerror(-errno));
+    if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
+        qDebug("error %d : %s\n", -errno, strerror(-errno));
+//    if (strcmp(bufValue, "hysRea"))
+        qDebug("Hysteresis analysis ready");
 }

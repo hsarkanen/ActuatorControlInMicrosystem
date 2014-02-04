@@ -35,9 +35,7 @@ void HysteresisDialog::on_cancelpushButton_clicked()
 // ettei signaali kytkeydy useasti
 void HysteresisDialog::setController( ControllerInterface * controller )
 {
-
     mController = controller;
-    connect(mController, SIGNAL(hysteresisResultsReady()), this, SLOT(handleResults()));
 }
 
 void HysteresisDialog::on_startpushButton_clicked()
@@ -126,12 +124,16 @@ void HysteresisDialog::on_startpushButton_clicked()
     // asetetaan ylös HysteresisSingletonin tietorakenteeseen kolmioaallon koko
     data.controlValuesAmount = size;
 
-    // liipastaan käytiin hystereesianalyysi
-    mController->startHysteresisAnalysis();
-
     // estetään dialogin lopettaminen tai analyysin aloitus analyysin aikana
     ui->startpushButton->setEnabled(false);
     ui->cancelpushButton->setEnabled(false);
+
+    // liipastaan käytiin hystereesianalyysi
+    mController->startHysteresisAnalysis();
+
+    // UI on tässä jummissa kunnes tulokset tulee
+    handleResults();
+
 }
 
 void HysteresisDialog::handleResults()

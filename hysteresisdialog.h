@@ -31,8 +31,8 @@ protected:
     ControllerInterface* mController;
 
 private:
-    Ui::HysteresisDialog *ui;
     HysteresisGraph* m_hysteresisGraph;
+    Ui::HysteresisDialog *ui;
 };
 
 #endif // HYSTERESISDIALOG_H
