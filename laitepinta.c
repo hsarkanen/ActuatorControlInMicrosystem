@@ -28,6 +28,7 @@ typedef struct laite_data {
 static double dev_range[] = {-10.0,10.0};
 #ifndef EI_LAITTEITA
 static a4l_desc_t daq_laite;
+#define READ_BUFFER_SIZE 6
 #endif
 static laite laitteet[2] = {
 #ifndef EI_LAITTEITA
@@ -121,7 +122,7 @@ int lueMittaus(laite_id id, double* mittaus) {
   if( lte->tyyppi != AD_MITTAUS ) return -1;
 
 #ifndef EI_LAITTEITA
-  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(lsampl_t));
+  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, READ_BUFFER_SIZE);
   if (err < 0){ printf("Read error\n"); return -1;}
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
