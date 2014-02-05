@@ -37,22 +37,17 @@ RT_TASK task_desc;
 RT_PIPE pipe_desc;
 int pipefd = 0;
 
-int pid(int setValue, int measurement,  int kp, int ki, int kd)
+int pid(double setValue, double measurement,  double kp, double ki, double kd)
 {
     // muuten sama toteutus PID-säätimen algoritmille kuin
     // kantaluokassa mutta jakson aika T on parempi 2000Hz reaaliaika säikeelle
-    // ja kp,ki ja kd parametreja on skaalattu vielä 100x pienemmiksi
 
     // PID-säätimen tilaa kuvaavat muuttujat
-    static int u[3];
-    static int e[3];
-    static int k[3];
+    static double u[3];
+    static double e[3];
+    static double k[3];
 
-    const double T = 1/50.0 * 100.0;
-
-    kp = kp / 10000.0;
-    ki = ki / 100.0;
-    kd = kd / 10000.0;
+    const double T = 1/2000.0;
 
     e[0] = setValue - measurement;
 
@@ -87,7 +82,7 @@ int pid(int setValue, int measurement,  int kp, int ki, int kd)
     qDebug()<<"E     :" + QString::number(e[0])+" "+ QString::number(e[1])+" "+ QString::number(e[2]);
     qDebug()<<"U     :" + QString::number(u[0])+" "+ QString::number(u[1])+" "+ QString::number(u[2]);
 
-    return u[0];
+    return u[0] * 1000;
 }
 
 void realtimeLoop(void *arg)
@@ -141,6 +136,7 @@ void realtimeLoop(void *arg)
         if(state == ControllerInterface::STARTED)
         {
             sensor->getValue(sensorVoltage);
+            sensorVoltage *= -1; // kytkentä väärinpäin
 
             // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
             if (!hystAnalysisRunning)
@@ -154,7 +150,8 @@ void realtimeLoop(void *arg)
                 else
                 {
                     // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
-                    output = pid(setValue, sensorVoltage, kp, ki, kd);
+                    output = pid(setValue/1000.0, sensorVoltage/1000.0, kp/1000.0, ki/1000.0, kd/1000.0);
+                    actuatorVoltage = output;
                 }
             }
             // jos tehdään hystereesianalyysiä ei tehdä PID-säätöä tai suoraa ohjausta

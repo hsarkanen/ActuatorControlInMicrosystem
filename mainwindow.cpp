@@ -147,19 +147,15 @@ void MainWindow::on_setpushButton_clicked()
         QMessageBox::warning(this, "", QString("Set PID-controller parameters!"));
         return;
     }
-    if ( ui->voltagedoubleSpinBox->value() < 0)
-        outputvoltage = (ui->voltagedoubleSpinBox->value() - 0.0005) * 1000;
-    else
-        outputvoltage = (ui->voltagedoubleSpinBox->value() + 0.0005) * 1000;
-    if ( ui->setvaluedoubleSpinBox->value() < 0)
-        setvalue = (ui->setvaluedoubleSpinBox->value() - 0.0005) * 1000;
-    else
-        setvalue = (ui->setvaluedoubleSpinBox->value() + 0.0005) * 1000;
-    kp = (ui->pdoubleSpinBox->value() + 0.005) * 100;
-    ki = (ui->idoubleSpinBox->value() + 0.005) * 100;
-    kd = (ui->ddoubleSpinBox->value() + 0.005) * 100;
-    actuatorscale = (ui->actuatordoubleSpinBox->value() + 0.0005) * 1000;
-    sensorscale = (ui->sensordoubleSpinBox->value() + 0.0005) * 1000;
+
+    // Skaalaa millivaluet inteiksi
+    kp = 1000 * ui->pdoubleSpinBox->value();
+    ki = 1000 * ui->idoubleSpinBox->value();
+    kd = 1000 * ui->ddoubleSpinBox->value();
+    setvalue = 1000 * ui->setvaluedoubleSpinBox->value();
+    outputvoltage = 1000 * ui->voltagedoubleSpinBox->value();
+    sensorscale = 1000 * ui->sensordoubleSpinBox->value();
+    actuatorscale = 1000 * ui->actuatordoubleSpinBox->value();
 
     // asetataan arvot controllerille
     qDebug()<< "Set PID: " << kp << " "<< ki<<" " << kd;
