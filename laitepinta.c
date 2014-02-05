@@ -121,7 +121,7 @@ int lueMittaus(laite_id id, double* mittaus) {
   if( lte->tyyppi != AD_MITTAUS ) return -1;
 
 #ifndef EI_LAITTEITA
-  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(lsampl_t)); // TODO: Why nbytes != sizeof(data)?
+  err = a4l_sync_read(&daq_laite, 0, CHAN(0), 0, &data, sizeof(lsampl_t));
   if (err < 0){ printf("Read error\n"); return -1;}
   err = a4l_rawtod(lte->chinfo, lte->rnginfo, mittaus, &data, 1);
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
