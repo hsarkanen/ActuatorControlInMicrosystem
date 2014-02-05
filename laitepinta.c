@@ -25,7 +25,7 @@ typedef struct laite_data {
 #endif
 } laite;
 
-static double dev_range[] = {-10,10};
+static double dev_range[] = {-10.0,10.0};
 #ifndef EI_LAITTEITA
 static a4l_desc_t daq_laite;
 #endif
@@ -151,6 +151,10 @@ int ohjaaLaitetta(laite_id id, double ohjaus) {
   if( lte->tyyppi != DA_OHJAUS ) return -1;
 
   ohjaus *= lte->vahvistus;
+
+  if( ohjaus < dev_range[0] ) {ohjaus = dev_range[0];}
+  else if( ohjaus > dev_range[1] ) {ohjaus = dev_range[1];}
+
   err = a4l_dtoraw(lte->chinfo, lte->rnginfo, &data, &ohjaus, 1);
   if (err < 0){ printf("Double to raw conversion error\n"); return -1;}
   err = a4l_sync_write(&daq_laite, 1, CHAN(0), 0, &data, sizeof(sampl_t));
