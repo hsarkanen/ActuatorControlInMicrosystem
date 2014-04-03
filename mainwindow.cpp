@@ -4,7 +4,6 @@
 #include <QMessageBox>
 #include <QTimer>
 #include "simplecontroller.h"
-#include "scopedmutex.h"
 #include <QDebug>
 #include "mainwindow.h"
 

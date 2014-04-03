@@ -15,7 +15,6 @@
 #include "simplecontroller.h"
 #include "piezoactuator.h"
 #include "piezosensor.h"
-#include "scopedmutex.h"
 #include "qglobal.h"
 #include <QTimer>
 #include <QMutex>
@@ -54,10 +53,6 @@ SimpleController::~SimpleController()
 // valmiiksi annetun pid-säädin logiikan toteutus
 double SimpleController::pid(double setValue, double measurement,  double kp, double ki, double kd)
 {
-    // varataan yksityisen tietorakenteen tiedot käyttöön
-    // säie pysähtyy seuraavalle riville kunnes saa resurssit varattua
-    ScopedMutex mutex(_mutex);
-
     // jaksoaika
     // pitäisi olla varmaankin 1/20 mutta tällä mentiin-ohjelman
     // demonstroinnissa
@@ -111,7 +106,6 @@ double SimpleController::pid(double setValue, double measurement,  double kp, do
 
 void SimpleController::start()
 {
-    ScopedMutex mutex(_mutex);
     // resetoidaan säätimen tila
     // ohjausta käynnistettäessä
     _u[0] = 0;
@@ -139,8 +133,6 @@ void SimpleController::start()
 
 void SimpleController::stop()
 {
-    ScopedMutex mutex(_mutex);
-
     // tila pysäytetyksi
     _state = ControllerInterface::STOPPED;
     qDebug("SimpleController: STOPPED");
@@ -151,8 +143,6 @@ void SimpleController::stop()
 
 void SimpleController::setPIDParameters( int kp, int ki, int kd )
 {
-    ScopedMutex mutex(_mutex);
-
     // astetaan käyttöön PID säätimet parametrit
     _kp = kp;
     _ki = ki;
@@ -161,8 +151,6 @@ void SimpleController::setPIDParameters( int kp, int ki, int kd )
 
 void SimpleController::setScaleFactors( int sensor, int output )
 {
-    ScopedMutex mutex(_mutex);
-
     // asetetaan käyttöön skaalauskertoimet ulostulolle ja anturille
     _actuatorScaleFactor = output;
     _sensorScaleFactor = sensor;
@@ -170,24 +158,18 @@ void SimpleController::setScaleFactors( int sensor, int output )
 
 void SimpleController::setSetValue( int value )
 {
-    ScopedMutex mutex(_mutex);
-
     // asetetaan käyttöön asetusarvo
     _setValue = value;
 }
 
 void SimpleController::setOutputVoltage( int value )
 {
-    ScopedMutex mutex(_mutex);
-
     // asetetaan käyttöön skaalattu ulostulojännite
     _actuatorVoltage = value * _actuatorScaleFactor;
 }
 
 void SimpleController::readSensorVoltage( int& value )
 {
-    ScopedMutex mutex(_mutex);
-
     // luetaan anturin mittausarvo
     // anturilukeman palautus viiteparametrina
     value = _sensorVoltage;
@@ -195,16 +177,12 @@ void SimpleController::readSensorVoltage( int& value )
 
 void SimpleController::setMode(   Mode mode )
 {
-    ScopedMutex mutex(_mutex);
-
     // asetetaan käyttöön moodi
     _mode = mode;
 }
 
 void SimpleController::readOutputVoltage( int &value )
 {
-    ScopedMutex mutex(_mutex);
-
     // luetaan toimilaitteen asetusarvo
     // asetusarvon palautus viiteparametrina
     _actuator->getValue(value);
@@ -212,23 +190,18 @@ void SimpleController::readOutputVoltage( int &value )
 
 void SimpleController::getMode( Mode& mode )
 {
-    ScopedMutex mutex(_mutex);
-
     // käytössä olevan moodin palautus viiteparametrina
     mode = _mode;
 }
 
 void SimpleController::getState( State& state )
 {
-    ScopedMutex mutex(_mutex);
-
     // käytössä olevan tilan palautus viiteparametrina
     state = _state;
 }
 
 void SimpleController::loop()
 {
-    ScopedMutex mutex(_mutex);
     // ei ohjata tai lueta antureita jos tila on pysäytetty
     if(_state == ControllerInterface::STOPPED)
     {

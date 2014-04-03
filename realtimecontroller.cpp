@@ -15,7 +15,6 @@
 #include "realtimecontroller.h"
 #include "piezoactuator.h"
 #include "piezosensor.h"
-#include "scopedmutex.h"
 #include "qglobal.h"
 #include <QTimer>
 #include <QDebug>

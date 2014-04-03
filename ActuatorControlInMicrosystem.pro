@@ -19,7 +19,6 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     laitepinta.c \
     simplecontroller.cpp \
-    scopedmutex.cpp \
     realtimecontroller.cpp \
     piezosensor.cpp \
     piezoactuator.cpp
@@ -29,7 +28,6 @@ HEADERS  += mainwindow.h \
     actuator.h \
     simplecontroller.h \
     sensor.h \
-    scopedmutex.h \
     realtimecontroller.h \
     piezosensor.h \
     piezoactuator.h \
