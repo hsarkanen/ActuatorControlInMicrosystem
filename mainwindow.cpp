@@ -3,7 +3,6 @@
 #include "realtimecontroller.h"
 #include <QMessageBox>
 #include <QTimer>
-#include "simplecontroller.h"
 #include <QDebug>
 #include "mainwindow.h"
 
@@ -15,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
     statusTimer = new QTimer();
 
     // varataan realtimecontrolleri
-//    mController = new SimpleController();
     mController = new RealtimeController();
 
     // asetetaan ruudunp�ivitysajastimelle jaksonaika 200ms eli 5Hz

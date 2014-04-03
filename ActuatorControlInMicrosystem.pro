@@ -18,7 +18,6 @@ INCLUDEPATH += /usr/xenomai/include
 SOURCES += main.cpp\
         mainwindow.cpp \
     laitepinta.c \
-    simplecontroller.cpp \
     realtimecontroller.cpp \
     piezosensor.cpp \
     piezoactuator.cpp
@@ -26,7 +25,6 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     laitepinta.h \
     actuator.h \
-    simplecontroller.h \
     sensor.h \
     realtimecontroller.h \
     piezosensor.h \
