@@ -44,18 +44,18 @@ void MainWindow::on_startPushButton_clicked()
 {
     qDebug("Startti painettu.");
     // estet��n k�ynnist�minen jos s��t� on jo k�ynniss�
-    ControllerInterface::State state;
+    RealtimeController::State state;
     mController->getState(state);
-    if( state == ControllerInterface::STARTED )
+    if( state == RealtimeController::STARTED )
     {
         return;
     }
 
 
     // estet��n PID-s��timen k�ynnist�minen jos PID-s��timen parametreja ei ole asetettu, ei pit�isi olla mahdollista
-    ControllerInterface::Mode mode;
+    RealtimeController::Mode mode;
     mController->getMode(mode);
-    if(mode == ControllerInterface::MODE_PID &&
+    if(mode == RealtimeController::MODE_PID &&
             kp == 0.0 && ki == 0.0 && kd == 0.0)
     {
         QMessageBox::warning(this, "", QString("Set PID-controller parameters!"));
@@ -72,9 +72,9 @@ void MainWindow::on_stopPushButton_clicked()
     qDebug("Stoppi painettu.");
 
     // estet��n pys�ytt�minen jos s��t� on jo pys�ytetty
-    ControllerInterface::State state;
+    RealtimeController::State state;
     mController->getState(state);
-    if( state == ControllerInterface::STOPPED)
+    if( state == RealtimeController::STOPPED)
     {
         return;
     }
@@ -114,9 +114,9 @@ void MainWindow::on_setpushButton_clicked()
 void MainWindow::statusTimerTimeout()
 {
     // haetaan tila ja vaihdetaan labeli sen mukaiseksi
-    ControllerInterface::State state;
+    RealtimeController::State state;
     mController->getState(state);
-    if(state == ControllerInterface::STARTED)
+    if(state == RealtimeController::STARTED)
     {
         ui->statuslabel->setText("STARTED");
     }
@@ -136,22 +136,22 @@ void MainWindow::statusTimerTimeout()
 
 void MainWindow::on_manualmodeRadioButton_clicked()
 {
-    ControllerInterface::Mode mode;
+    RealtimeController::Mode mode;
     mController->getMode(mode);
-    if(mode != ControllerInterface::MODE_MANUAL)
+    if(mode != RealtimeController::MODE_MANUAL)
     {
         qDebug("Changing to manual mode");
-        mController->setMode( ControllerInterface::MODE_MANUAL);
+        mController->setMode( RealtimeController::MODE_MANUAL);
     }
 }
 
 void MainWindow::on_closedmodeRadioButton_clicked()
 {
-    ControllerInterface::Mode mode;
+    RealtimeController::Mode mode;
     mController->getMode(mode);
-    if(mode != ControllerInterface::MODE_PID)
+    if(mode != RealtimeController::MODE_PID)
     {
         qDebug("Changing to PID-mode");
-        mController->setMode( ControllerInterface::MODE_PID);
+        mController->setMode( RealtimeController::MODE_PID);
     }
 }

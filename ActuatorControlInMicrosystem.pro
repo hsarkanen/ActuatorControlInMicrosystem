@@ -28,7 +28,6 @@ HEADERS  += mainwindow.h \
     sensor.h \
     realtimecontroller.h \
     piezosensor.h \
-    piezoactuator.h \
-    controllerinterface.h
+    piezoactuator.h
 
 FORMS    += mainwindow.ui

@@ -1,8 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <controllerinterface.h>
 #include <QMainWindow>
+
+class RealtimeController;
 
 namespace Ui {
 class MainWindow;
@@ -27,7 +28,7 @@ private Q_SLOTS:
 
 private:
     Ui::MainWindow *ui;
-    ControllerInterface* mController;
+    RealtimeController* mController;
     int outputvoltage;
     int setvalue;
     int kp;

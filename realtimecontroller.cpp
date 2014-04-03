@@ -89,18 +89,18 @@ void realtimeLoop(void *arg)
     int xenoRet = 0;
     char bufChar[MAX_MESSAGE_LENGTH];
     int bufInt[MAX_MESSAGE_LENGTH];
-    ControllerInterface::Mode bufMode[MAX_MESSAGE_LENGTH];
-    ControllerInterface::State bufState[MAX_MESSAGE_LENGTH];
+    RealtimeController::Mode bufMode[MAX_MESSAGE_LENGTH];
+    RealtimeController::State bufState[MAX_MESSAGE_LENGTH];
     int kp = 0, ki = 0, kd = 0;
     int setValue = 0;
     int actuatorVoltage = 0;
     int actuatorVoltageToSend = 0;
     int sensorVoltage = 0;
     int sensorVoltageToSend = 0;
-    ControllerInterface::Mode mode = ControllerInterface::MODE_MANUAL;
-    ControllerInterface::Mode modeToSend;
-    ControllerInterface::State state = ControllerInterface::STOPPED;
-    ControllerInterface::State stateToSend;
+    RealtimeController::Mode mode = RealtimeController::MODE_MANUAL;
+    RealtimeController::Mode modeToSend;
+    RealtimeController::State state = RealtimeController::STOPPED;
+    RealtimeController::State stateToSend;
     int output = 0;
     PiezoSensor* sensor;
     PiezoActuator* actuator;
@@ -127,13 +127,13 @@ void realtimeLoop(void *arg)
         if(rt_task_wait_period(NULL) < 0)
             qDebug("task error in realtime loop");
 
-        if(state == ControllerInterface::STARTED)
+        if(state == RealtimeController::STARTED)
         {
             sensor->getValue(sensorVoltage);
             sensorVoltage *= -1; // kytkentä väärinpäin
 
             // tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
-            if( mode == ControllerInterface::MODE_MANUAL)
+            if( mode == RealtimeController::MODE_MANUAL)
             {
                 // suorassa jänniteohjauksessa laitetaan suoraan käyttäjän syöttämä skaalattu arvo
                 // ulostuloon
@@ -176,7 +176,7 @@ void realtimeLoop(void *arg)
             else if(!strcmp(bufChar, "reaMod"))
             {
                 modeToSend = mode;
-                ControllerInterface::Mode *pBuf = &modeToSend;
+                RealtimeController::Mode *pBuf = &modeToSend;
                 if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
                 bufChar[0] = '0';
@@ -184,7 +184,7 @@ void realtimeLoop(void *arg)
             else if(!strcmp(bufChar, "reaSta"))
             {
                 stateToSend = state;
-                ControllerInterface::State *pBuf = &stateToSend;
+                RealtimeController::State *pBuf = &stateToSend;
                 if(rt_pipe_write(&pipe_desc, (void*)pBuf, sizeof(bufInt), P_NORMAL) < 1)
                     qDebug("rt write error");
                 bufChar[0] = '0';
@@ -193,7 +193,7 @@ void realtimeLoop(void *arg)
             {
                 if(rt_pipe_read(&pipe_desc, bufState, sizeof(bufState), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                state = *(ControllerInterface::State*)bufState;
+                state = *(RealtimeController::State*)bufState;
                 bufChar[0] = '0';
                 qDebug("Set state: %d", state);
             }
@@ -242,7 +242,7 @@ void realtimeLoop(void *arg)
             {
                 if(rt_pipe_read(&pipe_desc, bufMode, sizeof(bufMode), TM_INFINITE) < 1)
                     qDebug("rt read error");
-                mode = *(ControllerInterface::Mode*)bufMode;
+                mode = *(RealtimeController::Mode*)bufMode;
                 bufChar[0] = '0';
                 qDebug("Set mode to: %d", mode);
             }
@@ -353,9 +353,9 @@ void RealtimeController::readSensorVoltage(int &value)
     value = *(int*)bufValue;
 }
 
-void RealtimeController::setMode(ControllerInterface::Mode mode)
+void RealtimeController::setMode(RealtimeController::Mode mode)
 {
-    ControllerInterface::Mode *bufValue;
+    RealtimeController::Mode *bufValue;
     if(write(pipefd, "setMod", sizeof("setMod")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     bufValue = &mode;
@@ -365,8 +365,8 @@ void RealtimeController::setMode(ControllerInterface::Mode mode)
 
 void RealtimeController::start()
 {
-    ControllerInterface::State *bufValue;
-    ControllerInterface::State state = STARTED;
+    RealtimeController::State *bufValue;
+    RealtimeController::State state = STARTED;
     if(write(pipefd, "setSta", sizeof("setSta")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     bufValue = &state;
@@ -376,8 +376,8 @@ void RealtimeController::start()
 
 void RealtimeController::stop()
 {
-    ControllerInterface::State *bufValue;
-    ControllerInterface::State state = STOPPED;
+    RealtimeController::State *bufValue;
+    RealtimeController::State state = STOPPED;
     if(write(pipefd, "setSta", sizeof("setSta")) < 0)
         qDebug("er2ror %d : %s\n", -errno, strerror(-errno));
     bufValue = &state;
@@ -395,22 +395,22 @@ void RealtimeController::readOutputVoltage(int &value)
     value = *(int*)bufValue;
 }
 
-void RealtimeController::getMode(ControllerInterface::Mode &mode)
+void RealtimeController::getMode(RealtimeController::Mode &mode)
 {
-    ControllerInterface::Mode bufValue[MAX_MESSAGE_LENGTH];
+    RealtimeController::Mode bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaMod", sizeof("reaMod")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
-    mode = *(ControllerInterface::Mode*)bufValue;
+    mode = *(RealtimeController::Mode*)bufValue;
 }
 
-void RealtimeController::getState(ControllerInterface::State &state)
+void RealtimeController::getState(RealtimeController::State &state)
 {
-    ControllerInterface::State bufValue[MAX_MESSAGE_LENGTH];
+    RealtimeController::State bufValue[MAX_MESSAGE_LENGTH];
     if(write(pipefd, "reaSta", sizeof("reaSta")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
-    state = *(ControllerInterface::State*)bufValue;
+    state = *(RealtimeController::State*)bufValue;
 }
