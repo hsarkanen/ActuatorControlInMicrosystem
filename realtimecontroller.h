@@ -48,8 +48,6 @@ public:
     void readOutputVoltage( int &value );
     void getMode( Mode& mode );
     void getState( State& state );
-
-    void startHysteresisAnalysis();
 };
 
 #endif

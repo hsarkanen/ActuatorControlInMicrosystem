@@ -8,8 +8,6 @@ namespace Ui {
 class MainWindow;
 }
 
-class HysteresisDialog;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -19,7 +17,6 @@ public:
     ~MainWindow();
 
 private Q_SLOTS:
-    void on_hysteresisanalysispushButton_clicked();
     void statusTimerTimeout();
     void on_setpushButton_clicked();
     void on_startPushButton_clicked();
@@ -39,7 +36,6 @@ private:
     int actuatorscale;
     int sensorscale;
     QTimer* statusTimer;
-    HysteresisDialog* hd;
 };
 
 #endif // MAINWINDOW_H

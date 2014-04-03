@@ -17,18 +17,14 @@ INCLUDEPATH += /usr/xenomai/include
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    hysteresisdialog.cpp \
     laitepinta.c \
     simplecontroller.cpp \
     scopedmutex.cpp \
     realtimecontroller.cpp \
     piezosensor.cpp \
-    piezoactuator.cpp \
-    hysteresissingleton.cpp \
-    hysteresisgraph.cpp
+    piezoactuator.cpp
 
 HEADERS  += mainwindow.h \
-    hysteresisdialog.h \
     laitepinta.h \
     actuator.h \
     simplecontroller.h \
@@ -37,10 +33,6 @@ HEADERS  += mainwindow.h \
     realtimecontroller.h \
     piezosensor.h \
     piezoactuator.h \
-    hysteresissingleton.h \
-    controllerinterface.h \
-    hysteresisgraph.h
+    controllerinterface.h
 
-FORMS    += mainwindow.ui \
-    hysteresisdialog.ui \
-    hysteresisgraph.ui
+FORMS    += mainwindow.ui

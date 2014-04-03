@@ -461,19 +461,6 @@
      <string>Stop</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="hysteresisanalysispushButton">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>530</y>
-      <width>141</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Hysteresis analysis</string>
-    </property>
-   </widget>
    <widget class="QDoubleSpinBox" name="setvaluedoubleSpinBox">
     <property name="geometry">
      <rect>
@@ -519,7 +506,7 @@
      <x>0</x>
      <y>0</y>
      <width>610</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

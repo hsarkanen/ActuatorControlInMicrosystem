@@ -15,7 +15,6 @@
 #include "simplecontroller.h"
 #include "piezoactuator.h"
 #include "piezosensor.h"
-#include "hysteresissingleton.h"
 #include "scopedmutex.h"
 #include "qglobal.h"
 #include <QTimer>
@@ -25,7 +24,7 @@
 
 SimpleController::SimpleController():
     _actuatorVoltage(0), _sensorVoltage(0), _state(ControllerInterface::STOPPED),
-    _hysteresisAnalysisRunning(false), _mutex(QMutex::Recursive)
+    _mutex(QMutex::Recursive)
 {
     // varataan muisti anturille ja alustetaa se
     _sensor = new PiezoSensor();
@@ -44,12 +43,6 @@ SimpleController::SimpleController():
 
     // ajastimen luominen
     _loopTimer = new QTimer();
-
-    // vaihdetaan jakson samplejen määräksi 20
-    // vastaavasti kuin 2000 reaaliaikasäikeellä
-    HysteresisData& data = getHysteresisData();
-    ScopedMutex hystMutex(data.mutex);
-    data.samples = 20.0;
 
     // oletuksena säätö pysäytettynä
     stop();        
@@ -249,55 +242,19 @@ void SimpleController::loop()
     int output;
     _sensor->getValue(sensorValue);
     _sensorVoltage = -sensorValue * _sensorScaleFactor;
-    HysteresisData& data = getHysteresisData();
 
-
-    // jos tehdään hystereesi analyysiä ei tehdä PID-säätöä tai suoraa ohjausta
-    if( _hysteresisAnalysisRunning )
+    // tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
+    if( _mode == ControllerInterface::MODE_MANUAL)
     {
-        // otetaan talteen käytäjän määrittelemän kolmioaallon pituuden verran sampleja
-        unsigned int amount = 0;
-
-        // Critical section
-        {
-            // luetaan kolmioaallon ohjausjännite ja tallennetaan anturin arvo
-            // resurssi varaan ensin hystMutex:lla, jotten HysteresisSingletonin
-            // tietorakenteen tietoja käsitellä samaan aikaan eri säikeistä
-            ScopedMutex hystMutex(data.mutex);
-            data.measurement[_hysteresisControlListIndex] = _sensorVoltage;
-            output = data.output[_hysteresisControlListIndex];
-            amount = data.controlValuesAmount;
-        }
-
-        // kasvatetaan indeksiä kunnes ollaan valmiita
-        if( _hysteresisControlListIndex < amount -1 )
-        {
-            _hysteresisControlListIndex += 1;
-        }
-        else
-        {
-            // ollaan valmiita joten ilmoitetaan siitä QT:n signaalilla
-            Q_EMIT hysteresisResultsReady();
-
-            // lopetetaan hystereesi analyysin suorittaminen
-            _hysteresisAnalysisRunning = false;
-        }
+        // suorassa jänniteohjauksessa laitetaan suoraan käyttäjän syöttämä skaalattu arvo
+        // ulostuloon
+        output = _actuatorVoltage;
     }
-    // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
     else
     {
-        if( _mode == ControllerInterface::MODE_MANUAL)
-        {
-            // suorassa jänniteohjauksessa laitetaan suoraan käyttäjän syöttämä skaalattu arvo
-            // ulostuloon
-            output = _actuatorVoltage;
-        }
-        else
-        {
-            // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
-            output = pid(_setValue, _sensorVoltage, _kp, _ki, _kd) *
-                    _actuatorScaleFactor;
-        }
+        // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
+        output = pid(_setValue, _sensorVoltage, _kp, _ki, _kd) *
+                _actuatorScaleFactor;
     }
 
     // asetetaan ulostulo oikeasti toimilaitteelle
@@ -306,23 +263,9 @@ void SimpleController::loop()
 
 }
 
-void SimpleController::startHysteresisAnalysis()
-{
-    ScopedMutex mutex(_mutex);
-
-    // hystereesi analyysi käyntiin
-    _hysteresisAnalysisRunning = true;
-
-    // aloitetaan ensimmäisestä indeksistä
-    // loput tiedot ja paluuarvot HysteresisSingletonin kautta
-    _hysteresisControlListIndex = 0;
-
-    qDebug("SimpleController::setHysteresisControlList");
-}
-
 // jokaisella ajastimen kierroksella eli jaksonajan välein
 // kutsutaan kantaluokan loop()-jäsenfunktiota
-// joka totetuttaa ohjauksen ja hystereesianalyysin
+// joka totetuttaa ohjauksen
 void SimpleController::loopTimerTimeout()
 {
     loop();

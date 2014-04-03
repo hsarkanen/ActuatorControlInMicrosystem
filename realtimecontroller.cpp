@@ -15,7 +15,6 @@
 #include "realtimecontroller.h"
 #include "piezoactuator.h"
 #include "piezosensor.h"
-#include "hysteresissingleton.h"
 #include "scopedmutex.h"
 #include "qglobal.h"
 #include <QTimer>
@@ -103,13 +102,9 @@ void realtimeLoop(void *arg)
     ControllerInterface::Mode modeToSend;
     ControllerInterface::State state = ControllerInterface::STOPPED;
     ControllerInterface::State stateToSend;
-    int hystAnalysisRunning = 0;
-    unsigned int hystControlListIndex = 0;
     int output = 0;
     PiezoSensor* sensor;
     PiezoActuator* actuator;
-
-    HysteresisData& hystData = getHysteresisData();
 
     // varataan muisti anturille ja alustetaa se
     sensor = new PiezoSensor();
@@ -138,39 +133,18 @@ void realtimeLoop(void *arg)
             sensor->getValue(sensorVoltage);
             sensorVoltage *= -1; // kytkentä väärinpäin
 
-            // normitilanteessa tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
-            if (!hystAnalysisRunning)
+            // tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
+            if( mode == ControllerInterface::MODE_MANUAL)
             {
-                if( mode == ControllerInterface::MODE_MANUAL)
-                {
-                    // suorassa jänniteohjauksessa laitetaan suoraan käyttäjän syöttämä skaalattu arvo
-                    // ulostuloon
-                    output = actuatorVoltage;
-                }
-                else
-                {
-                    // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
-                    output = pid(setValue/1000.0, sensorVoltage/1000.0, kp/1000.0, ki/1000.0, kd/1000.0);
-                    actuatorVoltage = output;
-                }
+                // suorassa jänniteohjauksessa laitetaan suoraan käyttäjän syöttämä skaalattu arvo
+                // ulostuloon
+                output = actuatorVoltage;
             }
-            // jos tehdään hystereesianalyysiä ei tehdä PID-säätöä tai suoraa ohjausta
             else
             {
-                hystData.measurement[hystControlListIndex] = sensorVoltage;
-                output = hystData.output[hystControlListIndex];
-                if (hystControlListIndex < hystData.controlValuesAmount - 1)
-                {
-                    ++hystControlListIndex;
-                }
-                else
-                {
-                    hystAnalysisRunning = 0;
-                    // kerrotaan non-rt puolelle että analyysi on valmis
-                    if(rt_pipe_write(&pipe_desc, "hysRea", sizeof("hysRea"), P_NORMAL) < 1)
-                        qDebug("rt write error");
-                    bufChar[0] = '0';
-                }
+                // PID-säädössä ajetaan algoritmi ja asetetaan ulostulo
+                output = pid(setValue/1000.0, sensorVoltage/1000.0, kp/1000.0, ki/1000.0, kd/1000.0);
+                actuatorVoltage = output;
             }
         }
 
@@ -273,12 +247,6 @@ void realtimeLoop(void *arg)
                 bufChar[0] = '0';
                 qDebug("Set mode to: %d", mode);
             }
-            else if (!strcmp(bufChar, "staHys"))
-            {
-                hystAnalysisRunning = 1;
-                hystControlListIndex = 0;
-                qDebug("Starting hysteris analysis");
-            }
             else if(!strcmp(bufChar, "theEnd"))
             {
                 qDebug("Bye!");
@@ -304,15 +272,6 @@ RealtimeController::RealtimeController()
 
     if(xenoError != 0)
         qDebug("rt init error");
-
-    // TODO: korjaa singleton
-    // varataan singletonin resurssit
-    HysteresisData& data = getHysteresisData();    
-    ScopedMutex hystMutex(data.mutex);
-
-    // päivitetään sekuntissa olevien samplejen määrä
-    // HysteresisSingletonin tietorakenteeseen
-    data.samples = 2000.0;    
 
     // pysäytetään ohjaus oletuksena
     rt_task_start(&task_desc, &realtimeLoop, NULL);
@@ -455,15 +414,4 @@ void RealtimeController::getState(ControllerInterface::State &state)
     if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
     state = *(ControllerInterface::State*)bufValue;
-}
-
-void RealtimeController::startHysteresisAnalysis()
-{
-    char bufValue[MAX_MESSAGE_LENGTH];
-    if(write(pipefd, "staHys", sizeof("staHys")) < 0)
-        qDebug("error %d : %s\n", -errno, strerror(-errno));
-    if(read(pipefd, (void*)bufValue, sizeof(bufValue)) < 1)
-        qDebug("error %d : %s\n", -errno, strerror(-errno));
-//    if (strcmp(bufValue, "hysRea"))
-        qDebug("Hysteresis analysis ready");
 }

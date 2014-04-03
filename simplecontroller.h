@@ -52,25 +52,15 @@ public:
     virtual void getMode( Mode& mode );
     virtual void getState( State& state );
 
-    virtual void startHysteresisAnalysis();
-
     // Varsinaisen säädön totetuttava funktio
     // Tätä kutsutaan niin usein kuin säätöloopin taajuus on
-    // Toteuttaa moodin ja tilan mukaisen säätämisen tai hystereesianalyysia
-    // sen mukaan onko moodi tai tila tai hystereesianalyysi käynnistetty
+    // Toteuttaa moodin ja tilan mukaisen säätämisen
+    // sen mukaan onko moodi tai tila käynnistetty
     //
-    // Lähettää hysteresisResultsReady signaalin kun hystereesianalyysi on valmis.
-    // Hystereesianalyysin parametrit ja tulokset välittyvät
-    // HysteresisSingletonin avulla
     void loop();
 
     // pid-säädön toteuttava funktio
     double pid(double setValue, double measurement,  double kp, double ki, double kd);
-
-Q_SIGNALS:
-
-    // Hystereesianalyysin valmistumisen ilmoittava signaali
-    void hysteresisResultsReady();
 
 private Q_SLOTS:
 
@@ -108,14 +98,6 @@ private Q_SLOTS:
 
     // Nykyinen PID-säätimen asetusarvo
     int _setValue;
-
-    // Ilmoittaa onko hystereesianalyysi käynnissä
-    bool _hysteresisAnalysisRunning;
-
-    // Ilmoittaa mikä hystereesianalyysin ohjaus ja -tulostaulukoiden
-    // indeksi on menossa tällä hetkellä
-    // maksimiraja löytyy HysteresisSingletonin tietorakenteesta
-    unsigned int _hysteresisControlListIndex;
 
     // PID-säätimen tilaa kuvaavat muuttujat
     int _u[3];

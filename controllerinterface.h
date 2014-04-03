@@ -79,9 +79,6 @@ public:
     // Nykyisen tilan lukeminen
     // -state: nykyinen tila State-tyypin mukaisena, eli STARTED tai STOPPED
 	virtual void getState( State& state ) = 0;
-	
-    // Aloittaa hystereesianalyysin.
-	virtual void startHysteresisAnalysis() = 0;
 };
 	
 #endif 

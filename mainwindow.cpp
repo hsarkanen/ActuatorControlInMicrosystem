@@ -1,11 +1,9 @@
 #include "ui_mainwindow.h"
-#include "hysteresisdialog.h"
 #include "qglobal.h"
 #include "realtimecontroller.h"
 #include <QMessageBox>
 #include <QTimer>
 #include "simplecontroller.h"
-#include "hysteresissingleton.h"
 #include "scopedmutex.h"
 #include <QDebug>
 #include "mainwindow.h"
@@ -14,35 +12,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow), outputvoltage(0.0), setvalue(0.0), kp(0.0), ki(0.0), kd(0.0)
 {
-    // varataan HysteresisSingletonin resurssit
-    HysteresisData& data = getHysteresisData();
-
-    // Critical section
-    {
-        ScopedMutex hystMutex(data.mutex);
-
-        // varataan HysteresisSingleton tietorakenteen
-        // taulujen maksimikooksi 8Mt
-        data.size = 8000000;
-        data.output = new double[data.size];
-        data.measurement = new double[data.size];
-
-        // asetetaan oletuskoko samplejen m��r�lle jaksossa
-        data.samples = 2000.0;
-    }
-
-    // varataan hystereesi dialogin muisti
-    hd = new HysteresisDialog(this);
-
     // varataan ruudunpäivitysajastimen muisti
     statusTimer = new QTimer();
 
     // varataan realtimecontrolleri
 //    mController = new SimpleController();
     mController = new RealtimeController();
-
-    // asetetaan dialogille osoitin controlleriin
-    hd->setController(mController);
 
     // asetetaan ruudunp�ivitysajastimelle jaksonaika 200ms eli 5Hz
     statusTimer->start(200);
@@ -64,8 +39,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    // vapautetaan hystereesi dialogi
-    delete hd;
     // vapautetaan controlleri
     delete ui;
 }
@@ -111,33 +84,6 @@ void MainWindow::on_stopPushButton_clicked()
 
     // pys�ytet��n s��t�
     mController->stop();
-}
-
-void MainWindow::on_hysteresisanalysispushButton_clicked()
-{
-    // estet��n hystereesi dialogin k�ynnist�minen
-    // jos s��t� on pys�ytetty tai PID-s��t� on valittuna
-
-    ControllerInterface::Mode mode;
-    mController->getMode(mode);
-    if(mode == ControllerInterface::MODE_PID )
-    {
-        QMessageBox::warning(this, "",
-                             QString("Cannot do hysteresisanalysis in Closed control mode!\nPlease set manual mode and start control."));
-        return;
-    }
-
-    ControllerInterface::State state;
-    mController->getState(state);
-    if(state == ControllerInterface::STOPPED )
-    {
-        QMessageBox::warning(this, "",
-                             QString("Cannot do hysteresisanalysis when actuator is stopped!\nPlease set manual mode and start control."));
-        return;
-    }
-
-    // k�ynnistet��n hystereesi dialogi modaalisena
-    hd->exec();
 }
 
 void MainWindow::on_setpushButton_clicked()
