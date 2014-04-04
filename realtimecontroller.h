@@ -1,20 +1,11 @@
 //----------------------------------------------------------------------------
-// ACI-32020 Automaation reaaliaikajärjestelmät, syksy 2011
-//
-//         Harjoitustyö: Mikrosysteemitekniikan toimilaiteohjaus
-//
-// Vastaava assistentti: David Hästbacka, david.hastbacka@tut.fi, huone sd114
-//              Ryhmä 8: Petri Rokka (189637), Heikki Sarkanen (198905)
-//
-//----------------------------------------------------------------------------
 //
 //  RealtimeController -luokan määrittely
 //
-//  Toteuttaa säätimen loopin uusiksi niin että se käyttää Linuxin RTAI
-//  reaaliaikalaajennosta 2000Hz deterministisen säädinloopin toteutumiseksi.
-//  Määrittää PID-säätimen uusiksi, koska kp,ki ja kd arvoja pitää hieman skaalata,
-//  jotta niillä saavutetaan parempi käyttöalue käyttöliittymällä.
-//
+//  Toteuttaa säätimen, 500µs:n jaksonajalla, käyttäen Xenomai
+//  reaaliaikalaajennosta, luo reaaliaika säikeen/taskin
+//  ja kommunikoi pääsäikeen ja reaaliaikasäikeen välillä käyttäen Xenomai Pipea
+//  Luo tarvittavat toimilaitteet
 //----------------------------------------------------------------------------
 
 

@@ -1,3 +1,9 @@
+//----------------------------------------------------------------------------
+//
+//  Käyttöliittymän toteutus
+//
+//----------------------------------------------------------------------------
+
 #include "ui_mainwindow.h"
 #include "qglobal.h"
 #include "realtimecontroller.h"
@@ -16,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // varataan realtimecontrolleri
     mController = new RealtimeController();
 
-    // asetetaan ruudunp�ivitysajastimelle jaksonaika 200ms eli 5Hz
+    // asetetaan ruudunpäivitysajastimelle jaksonaika 200ms eli 5Hz
     statusTimer->start(200);
 
     ui->setupUi(this);
@@ -29,9 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     fileMenu->addAction(quitAct);
     connect(quitAct, SIGNAL(triggered()),this,SLOT(close()));
 
-    // kytket��n ruudunp�ivitysajastimen k�sittelij�
+    // kytketään ruudunpäivitysajastimen käsittelijä
     connect(statusTimer, SIGNAL(timeout()), this, SLOT(statusTimerTimeout()));
-
 }
 
 MainWindow::~MainWindow()
@@ -43,7 +48,8 @@ MainWindow::~MainWindow()
 void MainWindow::on_startPushButton_clicked()
 {
     qDebug("Startti painettu.");
-    // estet��n k�ynnist�minen jos s��t� on jo k�ynniss�
+
+    // estetään käynnistäminen jos säätö on jo käynnissä
     RealtimeController::State state;
     mController->getState(state);
     if( state == RealtimeController::STARTED )
@@ -51,8 +57,7 @@ void MainWindow::on_startPushButton_clicked()
         return;
     }
 
-
-    // estet��n PID-s��timen k�ynnist�minen jos PID-s��timen parametreja ei ole asetettu, ei pit�isi olla mahdollista
+    // estetään PID-säätimen käynnistäminen jos PID-säätimen parametreja ei ole asetettu, ei pitäisi olla mahdollista
     RealtimeController::Mode mode;
     mController->getMode(mode);
     if(mode == RealtimeController::MODE_PID &&
@@ -62,7 +67,7 @@ void MainWindow::on_startPushButton_clicked()
     }
     else
     {
-        // jos kaikki onnistuu niin k�ynnistett��n s��t�
+        // jos kaikki onnistuu niin käynnistettään säätö
         mController->start();
     }
 }
@@ -71,7 +76,7 @@ void MainWindow::on_stopPushButton_clicked()
 {
     qDebug("Stoppi painettu.");
 
-    // estet��n pys�ytt�minen jos s��t� on jo pys�ytetty
+    // estetään pysäyttäminen jos säätö on jo pysäytetty
     RealtimeController::State state;
     mController->getState(state);
     if( state == RealtimeController::STOPPED)
@@ -79,7 +84,7 @@ void MainWindow::on_stopPushButton_clicked()
         return;
     }
 
-    // pys�ytet��n s��t�
+    // pysäytetään säätö
     mController->stop();
 }
 

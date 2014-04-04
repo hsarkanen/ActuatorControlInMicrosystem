@@ -1,3 +1,12 @@
+//----------------------------------------------------------------------------
+//
+//  MainWindow -luokan määrittely
+//
+//  Huolehtii käyttöliittymän toteutuksesta ja reaaliaika kontrollerin
+//  luomisesta
+//
+//----------------------------------------------------------------------------
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 

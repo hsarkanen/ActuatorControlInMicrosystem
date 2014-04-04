@@ -1,12 +1,4 @@
 //----------------------------------------------------------------------------
-// ACI-32020 Automaation reaaliaikajärjestelmät, syksy 2011
-//
-//         Harjoitustyö: Mikrosysteemitekniikan toimilaiteohjaus
-//
-// Vastaava assistentti: David Hästbacka, david.hastbacka@tut.fi, huone sd114
-//              Ryhmä 8: Petri Rokka (189637), Heikki Sarkanen (198905)
-//
-//----------------------------------------------------------------------------
 //
 //  RealtimeController -luokan toteutus
 //
@@ -35,11 +27,10 @@ RT_TASK task_desc;
 RT_PIPE pipe_desc;
 int pipefd = 0;
 
+// PID-säätimen ohjelmallinen toteutus, parametrit voltteina ja kokonaislukuina
+// palauttaa ohjausarvon int millivoltteina
 int pid(double setValue, double measurement,  double kp, double ki, double kd)
 {
-    // muuten sama toteutus PID-säätimen algoritmille kuin
-    // kantaluokassa mutta jakson aika T on parempi 2000Hz reaaliaika säikeelle
-
     // PID-säätimen tilaa kuvaavat muuttujat
     static double u[3];
     static double e[3];
@@ -113,8 +104,6 @@ void realtimeLoop(void *arg)
     actuator = new PiezoActuator();
     actuator->init();
 
-    // Xenomai laajennoksen ajurin alustukset
-
     // määritetään jaksonaika 500us eli 500000ns
     RTIME interval = 500000;
 
@@ -130,7 +119,7 @@ void realtimeLoop(void *arg)
         if(state == RealtimeController::STARTED)
         {
             sensor->getValue(sensorVoltage);
-            sensorVoltage *= -1; // kytkentä väärinpäin
+            sensorVoltage *= -1; // kytkentä laboratoriolaitteistolla on väärinpäin
 
             // tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
             if( mode == RealtimeController::MODE_MANUAL)
@@ -155,6 +144,10 @@ void realtimeLoop(void *arg)
         xenoRet = 0;
         xenoRet = rt_pipe_read(&pipe_desc, bufChar, sizeof(bufChar), TM_NONBLOCK);
 
+        // jos oltiin saatu viesti, luetaan sen sisältö ja muutetaan tai
+        // palautetaan lukuarvoja ja tiloja tarvittaessa
+        // mutexia ei tarvita, koska tämä tehdään joka kierroksella
+        // säätölaskennan ja säädön jälkeen
         if(xenoRet > 0)
         {
             if(!strcmp(bufChar, "reaSen"))
@@ -259,12 +252,14 @@ void realtimeLoop(void *arg)
 
 RealtimeController::RealtimeController()
 {
-    // lukitaan ohjelman nykinen ja tuleva muisti niin että se pysyy RAM:ssa kokoajan
+    // lukitaan ohjelman nykyinen ja tuleva muisti niin että se pysyy RAM:ssa kokoajan
     mlockall(MCL_CURRENT | MCL_FUTURE);
 
     int xenoError = 0;
 
     // luodaan task-handle reaaliaikasäikeelle
+    // antamalla T_FPU | T_JOINABLE saattaisi olla mahdollista käyttää
+    // mittausarvoja doubleina Voltteina koko ohjelmassa
     xenoError = rt_task_create(&task_desc, NULL, 0, 99, T_JOINABLE);
 
     xenoError = rt_pipe_create(&pipe_desc, NULL, 0, 0);
@@ -272,7 +267,7 @@ RealtimeController::RealtimeController()
     if(xenoError != 0)
         qDebug("rt init error");
 
-    // pysäytetään ohjaus oletuksena
+    // käynnistetään säie
     rt_task_start(&task_desc, &realtimeLoop, NULL);
 
     // luodaan pipe reaaliaikasäikeen kanssa kommunikointiin
@@ -288,12 +283,16 @@ RealtimeController::~RealtimeController()
     // signaloidaan säikeelle että sen pitää sammuttaa itsensä
     if(write(pipefd, "theEnd", sizeof("theEnd")) < 0)
         qDebug("error %d : %s\n", -errno, strerror(-errno));
-    // odotetaan kunnes säie on sammunut
+    // odotetaan kunnes säie on sammunut, erillistä deleteä EI saa tehdä
     rt_task_join(&task_desc);
     // vapautetaan pipen resurssit
     rt_pipe_delete(&pipe_desc);
 }
 
+
+// Funktioissa tästä eteenpäin kirjoitetaan Linux-säikeessä pipeen,
+// josta reaaliaika säie/taski käy lukemassa viestin seuraavalla
+// säätökerran jälkeen
 void RealtimeController::setPIDParameters(int kp, int ki, int kd)
 {
     int *bufValue;
