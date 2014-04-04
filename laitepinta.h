@@ -2,7 +2,7 @@
 #define LAITEPINTA_H
 
 //Kommentoi pois jos itse mittakortti on asennettu
-//#define EI_LAITTEITA
+#define EI_LAITTEITA
 
 #ifdef __cplusplus
 extern "C" {
