@@ -128,9 +128,6 @@ int lueMittaus(laite_id id, double* mittaus) {
   if (err < 0){ printf("Raw to int conversion error\n"); return -1;}
   *mittaus *= lte->vahvistus;
 #else
-  //data = 32767;
-  // poistettu, jotta kÃ€sittely ja muutokset voitaisiin tehdÃ€ ohjauksen pÃ€ivityksen yhteydessÃ€
-  // lisÃ€tty seuraavat:
   *mittaus = simulatedData;
   *mittaus *= lte->vahvistus;
   
