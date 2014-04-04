@@ -122,7 +122,6 @@ void realtimeLoop(void *arg)
         if(state == RealtimeController::STARTED)
         {
             sensor->getValue(sensorVoltage);
-            sensorVoltage *= -1; // kytkentä laboratoriolaitteistolla on väärinpäin
 
             // tarkastetaan ajetaanko PID-säätöä vai suoraa ohjausta
             if( mode == RealtimeController::MODE_MANUAL)
