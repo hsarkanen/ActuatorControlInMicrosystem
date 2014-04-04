@@ -106,8 +106,9 @@ void realtimeLoop(void *arg)
     actuator = new PiezoActuator();
     actuator->init();
 
-    // määritetään jaksonaika 500us eli 500000ns
-    RTIME interval = 500000;
+    // määritetään jaksonaika virtuaalikoneelle 50ms eli 50000000ns
+    // (laboratoriokoneella 500us eli 500000ns)
+    RTIME interval = 50000000;
 
     // määritetään taskia kutsuttavaksi jaksonajan välein
     xenoRet = rt_task_set_periodic(NULL, TM_NOW, interval);
