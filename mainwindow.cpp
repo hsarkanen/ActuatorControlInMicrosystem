@@ -42,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     // vapautetaan controlleri
+    delete mController;
+    // vapautetaan käyttöliittymä
     delete ui;
 }
 
