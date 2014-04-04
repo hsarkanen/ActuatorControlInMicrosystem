@@ -7,17 +7,19 @@
 #include "realtimecontroller.h"
 #include "piezoactuator.h"
 #include "piezosensor.h"
-#include "qglobal.h"
-#include <QTimer>
+
 #include <QDebug>
-#include <sys/mman.h>
-#include <malloc.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <string.h>
-#include <stdio.h>
+
+// Linux includes
 #include <errno.h>
-// xenomai includes
+#include <fcntl.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+
+// Xenomai includes
 #include <native/task.h>
 #include <native/pipe.h>
 

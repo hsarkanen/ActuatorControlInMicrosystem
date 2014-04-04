@@ -5,12 +5,11 @@
 //----------------------------------------------------------------------------
 
 #include "ui_mainwindow.h"
-#include "qglobal.h"
+#include "mainwindow.h"
 #include "realtimecontroller.h"
+#include <QDebug>
 #include <QMessageBox>
 #include <QTimer>
-#include <QDebug>
-#include "mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

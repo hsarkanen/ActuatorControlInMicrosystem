@@ -6,7 +6,7 @@
 
 #include "piezosensor.h"
 #include "laitepinta.h"
-#include "qglobal.h"
+#include <QDebug>
 
 PiezoSensor::PiezoSensor(): _value(0)
 {

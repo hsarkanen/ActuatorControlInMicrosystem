@@ -1,10 +1,10 @@
 #include "laitepinta.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include <errno.h>
 #ifndef EI_LAITTEITA
-#include <analogy/analogy.h>
+#include <analogy/analogy.h>  // Xenomai NI PCI ajurin include
 #endif
 
 #ifdef EI_LAITTEITA
